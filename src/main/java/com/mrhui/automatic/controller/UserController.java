@@ -110,19 +110,8 @@ public class UserController extends CrudControllerA<TUser> {
     @RequiresAuthentication
     @GetMapping("/logout")
     @ResponseBody
-    public StandardResult<String> logout() throws IOException {
+    public StandardResult<String> logout() {
         Subject subject = SecurityUtils.getSubject();
-        if(subject.isAuthenticated()){
-            UserVO userVO = (UserVO) subject.getPrincipal();
-            WebsocketClient websocketClient = WebSocketService.clients.get(userVO.getUser().getUserId());
-            if (websocketClient != null) {
-                Session session = websocketClient.getSession();
-                if (session != null && session.isOpen()) {
-                    session.close();
-                }
-                loggingService.logout(true,websocketClient.getUser().getUserId(),"退出登录！");
-            }
-        }
         subject.logout();
         return StandardResult.success("已退出登录！");
     }
