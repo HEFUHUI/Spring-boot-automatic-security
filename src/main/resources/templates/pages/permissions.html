@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{base}"
+
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultrap.net.nz/web/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title>权限管理</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <div th:replace="components/nav :: nav(${user.user})"></div>
+    <div class="row m-0 mt-2">
+        <div class="col-2 shadow-sm m-0 p-0" style="height: 80vh">
+            <div th:replace="components/menu :: menu('permissions')"></div>
+        </div>
+        <div class="col-10 h-100 m-0 pt-2" >
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="card-title">
+                        <h4>权限管理</h4>
+                    </div>
+                    <div class="row p-3 align-content-start">
+                        <div class="col-12">
+                            <button class="btn btn-dark" data-toggle="modal" data-target="#exampleModal">添加</button>
+                            <button class="btn btn-danger">删除</button>
+                        </div>
+                        <div class="col pt-4">
+                            <div class="input-group">
+                                <input type="text" placeholder="输入权限名称" class="form-control" aria-label="Text input with dropdown button">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button">搜索</button>
+                                    <button class="btn btn-outline-success dropdown-toggle" type="button"
+                                            data-toggle="dropdown" aria-expanded="false">条件
+                                    </button>
+                                    <div class="dropdown-menu">
+                                        <a class="dropdown-item" href="#">Action</a>
+                                        <a class="dropdown-item" href="#">Another action</a>
+                                        <a class="dropdown-item" href="#">Something else here</a>
+                                        <div role="separator" class="dropdown-divider"></div>
+                                        <a class="dropdown-item" href="#">Separated link</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <table class="table table-hover border shadow-sm table-sm">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">权限名称</th>
+                    <th scope="col">值</th>
+                    <th scope="col">描述</th>
+                    <th scope="col">创建时间</th>
+                    <th scope="col">操作</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                <tr th:each="item:${pages.items}">
+                    <th scope="row">
+                        <!--suppress HtmlFormInputWithoutLabel -->
+                        <input type="checkbox" th:name="${item.permissionsId}" name="row" id="row">
+                    </th>
+                    <td th:text="${item.title}">One</td>
+                    <td th:text="${item.code}">Otto</td>
+                    <td th:text="${item.comment}">@mdo</td>
+                    <td th:text="${#dates.format(item.createTime, 'yyyy-MM-dd')}">@mdo</td>
+                    <td>
+                        <button class="btn btn-warning btn-sm">编辑</button>
+                        <button class="btn btn-danger btn-sm" th:onclick="del([[${item.permissionsId}]])">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    <li th:class="|page-item  ${pages.currentPage < 2 ? 'disabled' : ''}|">
+                        <a class="page-link" th:href="${'/user/index?page='+(pages.currentPage-1)}">上一页</a>
+                    </li>
+                    <li class="page-item" th:each="i:${#numbers.sequence(1, pages.total / pages.limit + 1)}">
+                        <a class="page-link" th:href="${'/user/index?page='+i}" th:text="${i}">1</a>
+                    </li>
+                    <li th:class="|page-item  ${pages.currentPage >= (pages.total / pages.limit + 1) ? 'disabled' : ''}|">
+                        <a class="page-link" th:href="${'/user/index?page='+(pages.currentPage+1)}">下一页</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+    <div class="modal fade " id="exampleModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">添加权限</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form method="post" action="/permissions/add" enctype="multipart/form-data">
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="Title">权限名称</label>
+                                <input name="title" type="text" class="form-control" id="Title">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="code">权限值</label>
+                                <input type="text" name="code" class="form-control" id="code">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="comment">备注</label>
+                            <textarea name="comment" placeholder="输入备注" type="text" class="form-control"
+                                      id="comment"></textarea>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                            <button type="submit" class="btn btn-primary">保存更改</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const avatar_preview = $("#avatar_preview");
+        avatar_preview.hide();
+        $("input#avatar").change((e) => {
+            const file = e.target.files[0];
+            avatar_preview.attr("src", URL.createObjectURL(file));
+            avatar_preview.show()
+        })
+
+        function del(id) {
+            $.ajax(`/permissions/${id}`, {
+                method: "DELETE"
+            }).then(data => {
+                console.log(data)
+                if(data.code === 0){
+                    alert(data.msg)
+                }else{
+                    window.location.reload();
+                }
+            }).catch(err => {
+                alert(err.message)
+            })
+        }
+    </script>
+</div>
+</body>
+</html>

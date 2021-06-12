@@ -1,0 +1,121 @@
+"use strict";
+
+import Vue from 'vue';
+import axios from "axios";
+import { Loading, Message,Notification } from "element-ui"
+
+export let config = {
+  host: process.env.VUE_APP_baseURL || "192.168.2.185:8081",
+  timeout: 60 * 1000,
+};
+const _axios = axios.create({
+  baseURL: 'http://'+config.host,
+  timeout: config.timeout
+});
+let loading;
+function startLoading(){
+  loading = Loading.service({
+    text:"玩命加载中。。。。",
+     fullscreen:true
+  })
+}
+function stopLoading(){
+  loading.close();
+}
+
+_axios.interceptors.request.use(
+  function(config) {
+    startLoading();
+    config.headers.common['Authorization'] = sessionStorage.getItem("sessionsID")
+    return config;
+  },
+  function(error) {
+    stopLoading()
+    return Promise.reject(error);
+  }
+);
+
+_axios.interceptors.response.use(
+  function(response) {
+    if(response.data.code >= 300){
+      console.log(response)
+      Message({type:"error",message:response.data.msg,showClose:true})
+    }
+    if(response.data.code === 204){
+      Message({type:"success",message:response.data.msg,showClose:true})
+    }
+    stopLoading();
+    return response;
+  },
+  function(error) {
+    if(error.response.data.status === 400){
+      sessionStorage.removeItem("sessionsID")
+      Message({
+        type:"error",
+        message:"登录失效.请重新登录!",
+        showClose:true,
+      })
+    }else{
+      Message({
+        type:"error",
+        message:error.response.data.message || error.response.data.msg,
+        showClose:true,
+      })
+    }
+    stopLoading();
+    return Promise.reject(error);
+  }
+);
+let ws;
+function connectWS(){
+  ws = new WebSocket(`ws://${config.host}/websocket/DEBUG/USER/?token=${sessionStorage.getItem("sessionsID")}`);
+}
+connectWS();
+
+const app = new Vue();
+
+Plugin.install = function(Vue) {
+  Vue.axios = _axios;
+  window.axios = _axios;
+  Object.defineProperties(Vue.prototype, {
+    axios: {
+      get() {
+        return _axios;
+      }
+    },
+    $axios: {
+      get() {
+        return _axios;
+      }
+    },
+    $ws:{
+      get(){
+        return ws;
+      }
+    },
+    $eventBus:{
+      get(){
+        return app;
+      }
+    }
+  });
+};
+Vue.use(Plugin);
+ws.onmessage = (data)=>{
+  console.log(data)
+  app.$emit("ws-message",data)
+}
+ws.onclose = ()=>{
+  let n = Notification({type:"error",title:"已断开服务器连接!",duration:0,message:"点击重试！",showClose:true,
+    onClick(){
+      n.close()
+      connectWS();
+    }})
+}
+ws.onerror = (err)=>{
+  app.$emit("ws-error",err)
+}
+ws.onopen = function (){
+  Message({type:"success",message:"连接成功!",showClose:true})
+}
+export default Plugin;

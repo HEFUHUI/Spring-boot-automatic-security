@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mrhui.automatic.mapper.LoggingMapper">
+
+    <resultMap id="BaseResultMap" type="com.mrhui.automatic.entity.Logging">
+            <id property="logId" column="log_id" jdbcType="INTEGER"/>
+            <result property="logType" column="log_type" jdbcType="INTEGER"/>
+            <result property="logOutcome" column="log_outcome" jdbcType="BIT"/>
+            <result property="logCreateTime" column="log_create_time" jdbcType="TIMESTAMP"/>
+            <result property="logComment" column="log_comment" jdbcType="VARCHAR"/>
+            <result property="logUser" column="log_user" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <resultMap id="loggingMap" type="com.mrhui.automatic.entity.Logging" extends="BaseResultMap">
+        <association property="user" javaType="com.mrhui.automatic.entity.TUser" resultMap="com.mrhui.automatic.mapper.TUserMapper.BaseResultMap"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        log_id,log_type,log_outcome,
+        log_create_time,log_comment,log_user
+    </sql>
+
+    <sql id="key">
+        <trim suffixOverrides=",">
+            <if test="logType!=null">
+                log_type,
+            </if>
+            <if test="logOutcome!=null">
+                log_outcome,
+            </if>
+            <if test="logComment!=null">
+                log_comment,
+            </if>
+            <if test="logUser!=null">
+                log_user,
+            </if>
+            <if test="user!=null">
+                log_user,
+            </if>
+        </trim>
+    </sql>
+    <sql id="value">
+        <trim suffixOverrides=",">
+            <if test="logType!=null">
+                #{logType},
+            </if>
+            <if test="logOutcome!=null">
+                #{logOutcome},
+            </if>
+            <if test="logComment!=null">
+                #{logComment},
+            </if>
+            <if test="logUser!=null">
+                #{logUser},
+            </if>
+            <if test="user!=null">
+                #{user.userId},
+            </if>
+        </trim>
+    </sql>
+
+    <insert id="add" useGeneratedKeys="true">
+        insert into logging(<include refid="key"/>)
+        values (<include refid="value"/>)
+    </insert>
+
+    <select id="findById" resultMap="loggingMap">
+        select * from logging
+            left join t_user on log_user = t_user.user_id
+            left join t_image ti on t_user.avatar = ti.image_id
+        where log_id = #{id}
+    </select>
+
+    <select id="findByQuery" resultMap="loggingMap">
+        select * from logging
+                          left join t_user on log_user = t_user.user_id
+                          left join t_image ti on t_user.avatar = ti.image_id
+        where 1 = 1
+        <foreach collection="query.entrySet()" item="val" index="key" separator=" ">
+            <if test="val=='true' || val == 'false'">
+                and ${key} = ${val}
+            </if>
+            <if test="val!='true'">
+                and ${key} like '%${val}%'
+            </if>
+        </foreach>
+        limit #{skip},#{limit}
+    </select>
+    <select id="getCountByQuery" resultType="java.lang.Integer">
+        select count(*) from logging where 1 = 1
+        <foreach collection="query.entrySet()" item="val" index="key" separator=" ">
+            <if test="val=='true' || val == 'false'">
+                and ${key} = ${val}
+            </if>
+            <if test="val!='true'">
+                and ${key} like '%${val}%'
+            </if>
+        </foreach>
+    </select>
+
+</mapper>

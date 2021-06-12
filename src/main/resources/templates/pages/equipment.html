@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" layout:decorate="~{base('hello')}"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultrap.net.nz/web/thymeleaf/layout">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="|${title}管理|">用户</title>
+    <style>
+        .background-image{
+            background-size: cover;
+        }
+    </style>
+</head>
+<body>
+
+<div layout:fragment="content">
+    <div th:replace="components/nav :: nav(${user.user})"></div>
+    <div class="row m-0 mt-2">
+        <div class="col-2 shadow-sm m-0 p-0" style="height: 80vh">
+            <div th:replace="components/menu :: menu('equ')"></div>
+        </div>
+        <div class="col-10 h-100 m-0 pt-2">
+            <div class="card mb-3 shadow-sm">
+                <div class="card-body">
+                    <div class="card-title">
+                        <h4 th:text="|${title}管理|">用户管理</h4>
+                    </div>
+                    <div class="row p-3 align-content-start">
+                        <div class="col-12">
+                            <button class="btn btn-dark" onclick="showUploadImageModal()">添加</button>
+                            <button class="btn btn-danger">删除</button>
+                        </div>
+                        <div class="col pt-4">
+                            <div class="input-group">
+                                <input type="text" placeholder="输入昵称查询" class="form-control"
+                                       aria-label="Text input with dropdown button">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="button">搜索</button>
+                                    <button class="btn btn-outline-success dropdown-toggle" type="button"
+                                            data-toggle="dropdown" aria-expanded="false">条件
+                                    </button>
+                                    <div class="dropdown-menu">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row p-3">
+                <div class="col-4 p-1" th:each="item:${pages.items}">
+                    <div class="card shadow ">
+                        <div class="card-title text-center pt-3">
+                            <h5 th:text="${item.getNickName()}"></h5>
+                        </div>
+                        <div th:style="|background-image:url('/images/${item.getAvatar().getUrl()}');height: 200px !important;|"
+                             class="card-body text-center background-image" >
+                            <ul class="text-left text-white">
+                                <li>设备状态:[[${(!item.getOnline()) ? '离线' : '在线'}]]</li>
+                                <li>设备IP: [[${item.getLoginIp()}]]</li>
+                                <li>用途: 巡航</li>
+                                <li>
+                                    <button class="btn btn-block btn-primary">操作</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination">
+                    <li th:class="|page-item  ${pages.currentPage < 2 ? 'disabled' : ''}|">
+                        <a class="page-link" th:href="${'/image/index?page='+(pages.currentPage-1)}">上一页</a>
+                    </li>
+                    <li th:class="|page-item ${pages.currentPage == i ? 'active' : ''}|"
+                        th:each="i:${#numbers.sequence(1, pages.total / pages.limit + 1)}">
+                        <a class="page-link" th:href="${'/image/index?page='+i}" th:text="${i}">1</a>
+                    </li>
+                    <li th:class="|page-item  ${pages.currentPage >= (pages.total / pages.limit + 1) ? 'disabled' : ''}|">
+                        <a class="page-link" th:href="${'/image/index?page='+(pages.currentPage+1)}">下一页</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="modal fade " id="uploadImage" tabindex="-1" aria-labelledby="uploadImageLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="uploadImageLabel">上传图片</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <form method="post" action="/image/upload" enctype="multipart/form-data">
+                                <input class="form-control-file" type="file" name="file" id="file">
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">关闭</button>
+                                    <button type="submit" class="btn btn-primary">保存更改</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const avatar_preview = $("#avatar_preview");
+        avatar_preview.hide();
+        $("input#avatar").change((e) => {
+            const file = e.target.files[0];
+            avatar_preview.attr("src", URL.createObjectURL(file));
+            avatar_preview.show()
+        })
+
+        function del(id) {
+            if (confirm("确定删除吗？")) {
+                $.ajax(`/image/${id}`, {
+                    method: "DELETE"
+                }).then(data => {
+                    if (data.code === 0) {
+                        alert(data.msg)
+                    } else {
+                        window.location.reload();
+                    }
+                }).catch(err => {
+                    alert(err.message)
+                })
+            }
+        }
+
+        function check(e) {
+            if (e.classList.contains("btn-primary")) {
+                e.classList.add("btn-outline-info")
+                e.classList.remove("btn-primary")
+            } else {
+                e.classList.remove("btn-outline-info")
+                e.classList.add("btn-primary")
+            }
+        }
+
+
+        function showUploadImageModal(event) {
+            $('#uploadImage').modal()
+        }
+    </script>
+</div>
+</body>
+</html>

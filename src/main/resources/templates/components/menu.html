@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="border d-flex h-100 ml-1" th:fragment="menu(tab)">
+    <div class="row w-100 m-0">
+        <div class="list-group p-0 w-100">
+            <a href="/"
+               th:class="|${tab eq 'home' ? 'active' : ''} list-group-item list-group-item-action|"
+               th:aria-current="${tab eq 'home'}">首页</a>
+            <a href="/edu/student"
+               th:class="|${tab eq 'student' ? 'active' : ''} list-group-item list-group-item-action|"
+               th:aria-current="${tab eq 'student'}">学生管理</a>
+            <div class="my-2">
+               <span class="card-title py-2">
+               <i class="bi-sunset-fill"></i>
+                巡航管理
+           </span>
+                <a href="/permissions/index"
+                   th:class="|${tab eq 'permsissions' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'permisssions'}">巡航时间</a>
+                <a href="/equ/index"
+                   th:class="|${tab eq 'equ' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'equ'}">设备管理</a>
+                <a href="/role/index"
+                   th:class="|${tab eq 'rolse' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'rolse'}">角色管理</a>
+            </div>
+            <div class="my-2">
+               <span class="card-title py-2">
+               <i class="bi-sunset-fill"></i>
+                消息管理
+           </span>
+                <a href="/notice/index"
+                   th:class="|${tab eq 'notice' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'notice'}">发布公告</a>
+            </div>
+            <div class="my-2">
+               <span class="card-title py-2">
+               <i class="bi-sunset-fill"></i>
+                系统设置
+           </span>
+                <a href="/user/index"
+                   th:class="|${tab eq 'user' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'user'}">所有用户</a>
+                <a href="/permissions/index"
+                   th:class="|${tab eq 'permissions' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'permissions'}">权限管理</a>
+                <a href="/role/index"
+                   th:class="|${tab eq 'role' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'role'}">角色管理</a>
+                <a href="/image/index"
+                   th:class="|${tab eq 'image' ? 'active' : ''} list-group-item list-group-item-action|"
+                   th:aria-current="${tab eq 'image'}">图片资源管理</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

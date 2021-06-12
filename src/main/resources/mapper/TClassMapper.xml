@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mrhui.automatic.mapper.TClassMapper">
+
+    <resultMap id="BaseResultMap" type="com.mrhui.automatic.entity.TClass">
+            <id property="classId" column="class_id" jdbcType="VARCHAR"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateAt" column="update_at" jdbcType="TIMESTAMP"/>
+            <result property="comment" column="comment" jdbcType="VARCHAR"/>
+            <result property="isDelete" column="is_delete" jdbcType="BIT"/>
+            <result property="isWorking" column="is_working" jdbcType="BIT"/>
+    </resultMap>
+    <resultMap id="classMap" type="com.mrhui.automatic.entity.TClass" extends="BaseResultMap">
+        <collection property="users"
+                    javaType="java.util.ArrayList"
+                    resultMap="com.mrhui.automatic.mapper.TUserMapper.BaseResultMap"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        class_id,name,create_time,
+        update_at,comment,is_delete
+    </sql>
+
+
+
+    <sql id="key">
+        <trim suffixOverrides=",">
+            <if test="classId!=null">
+                class_id,
+            </if>
+            <if test="name!=null">
+                name,
+            </if>
+            <if test="comment!=null">
+                comment,
+            </if>
+        </trim>
+    </sql>
+    <sql id="value">
+        <trim suffixOverrides=",">
+            <if test="classId!=null">
+                #{classId},
+            </if>
+            <if test="name!=null">
+                #{name},
+            </if>
+            <if test="comment!=null">
+                #{comment},
+            </if>
+        </trim>
+    </sql>
+    <insert id="add" useGeneratedKeys="true">
+        insert into t_class(<include refid="key"/>)
+        values (<include refid="value"/>)
+    </insert>
+
+    <delete id="remove">
+        delete from t_class where class_id = #{id}
+    </delete>
+
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from t_class;
+    </select>
+
+    <select id="findAll" resultMap="classMap">
+        select * from t_class
+            left join t_user tu on t_class.class_id = tu.class_id
+            left join t_worker tw on t_class.class_id = tw.class_id
+            left join t_course tc on tc.course_id = tw.course_id order by tw.time limit #{skip},#{limit};
+    </select>
+    <select id="findByQuery" resultMap="classMap">
+        select * from t_class tc
+        left join t_user tu on tc.class_id = tu.class_id
+        where 1 = 1
+        <foreach collection="query.entrySet()" item="val" index="key" separator=" ">
+            and ${key} like '%${val}%'
+        </foreach>
+        limit #{skip},#{limit}
+    </select>
+
+    <update id="updateState">
+        update t_class
+        set is_working = #{working}
+        where class_id = #{id}
+    </update>
+
+    <select id="getCountByQuery" resultType="java.lang.Integer">
+        select count(*) from t_class
+        where 1 = 1
+        <foreach collection="query.entrySet()" item="val" index="key" separator=" ">
+            and ${key} like '%${val}%'
+        </foreach>
+    </select>
+</mapper>

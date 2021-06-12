@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mrhui.automatic.mapper.TWorkerMapper">
+
+    <resultMap id="BaseResultMap" type="com.mrhui.automatic.entity.TWorker">
+            <id property="classId" column="class_id" jdbcType="VARCHAR"/>
+            <id property="courseId" column="course_id" jdbcType="VARCHAR"/>
+            <id property="time" column="time" jdbcType="INTEGER"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateAt" column="update_at" jdbcType="TIMESTAMP"/>
+            <result property="comment" column="tw_comment" jdbcType="VARCHAR"/>
+            <result property="isDelete" column="is_delete" jdbcType="BIT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        class_id,course_id,time,
+        create_time,update_at,comment,
+        is_delete
+    </sql>
+</mapper>

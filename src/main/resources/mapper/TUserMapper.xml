@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mrhui.automatic.mapper.TUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.mrhui.automatic.entity.TUser">
+            <id property="userId" column="user_id" jdbcType="VARCHAR"/>
+            <result property="loginName" column="login_name" jdbcType="VARCHAR"/>
+            <result property="password" column="password" jdbcType="VARCHAR"/>
+            <result property="userType" column="user_type" jdbcType="INTEGER"/>
+            <result property="nickName" column="nick_name" jdbcType="VARCHAR"/>
+            <result property="loginIp" column="login_ip" jdbcType="VARCHAR"/>
+            <result property="online" column="online" jdbcType="BIT"/>
+            <result property="classId" column="class_id" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateAt" column="update_at" jdbcType="TIMESTAMP"/>
+            <result property="comment" column="comment" jdbcType="VARCHAR"/>
+            <result property="isDelete" column="is_delete" jdbcType="BIT"/>
+            <result property="sessionId" column="session_id" jdbcType="BIT"/>
+            <association property="avatar"
+                         resultMap="com.mrhui.automatic.mapper.TImageMapper.BaseResultMap"
+            />
+    </resultMap>
+
+    <resultMap id="userMap" type="com.mrhui.automatic.entity.TUser" extends="BaseResultMap">
+        <association property="tClass"
+                     resultMap="com.mrhui.automatic.mapper.TClassMapper.BaseResultMap"
+        />
+        <collection property="roles"
+                    columnPrefix="r_"
+                    javaType="java.util.ArrayList"
+                    resultMap="com.mrhui.automatic.mapper.TRoleMapper.BaseResultMap"
+        />
+    </resultMap>
+    <sql id="Base_Column_List">
+        user_id,
+        login_name,password,
+        user_type,avatar,login_ip,
+        nick_name,
+        online,class_id,create_time,
+        update_at,comment,is_delete
+    </sql>
+    <sql id="key">
+        <trim suffixOverrides=",">
+            <if test="userId!=null">
+                user_id,
+            </if>
+            <if test="loginName!=null">
+                login_name,
+            </if>
+            <if test="password!=null">
+                password,
+            </if>
+            <if test="userType!=null">
+                user_type,
+            </if>
+            <if test="avatar!=null">
+                avatar,
+            </if>
+            <if test="nickName!=null">
+                nick_name,
+            </if>
+        </trim>
+    </sql>
+    <sql id="value">
+        <trim suffixOverrides=",">
+            <if test="userId!=null">
+                #{userId},
+            </if>
+            <if test="loginName!=null">
+                #{loginName},
+            </if>
+            <if test="password!=null">
+                #{password},
+            </if>
+            <if test="userType!=null">
+               #{userType},
+            </if>
+            <if test="avatar!=null">
+                #{avatar.imageId},
+            </if>
+            <if test="nickName!=null">
+                #{nickName},
+            </if>
+        </trim>
+    </sql>
+    <insert id="add" useGeneratedKeys="true">
+        insert into t_user(<include refid="key"/>)
+        values (<include refid="value"/>)
+    </insert>
+    <update id="setRole">
+--         设置用户身份
+        insert into t_user_role(user_id,role_id) values (#{userId},#{role})
+    </update>
+    <update id="update">
+        update t_user
+            <set>
+        <if test="data.userType != null">user_type=#{data.userType},</if>
+        <if test="data.loginIp != null">login_ip=#{data.loginIp},</if>
+        <if test="data.online != null">online=#{data.online},</if>
+        <if test="data.comment != ''">comment=#{data.comment},</if>
+        <if test="data.nickName != null">nick_name=#{data.nickName},</if>
+        <if test="data.avatar != ''">avatar=#{data.avatar.imageId},</if>
+    </set>
+            where user_id = #{id}
+    </update>
+    <update id="setClass">
+        update t_user set class_id = #{classId} where user_id = #{userId}
+    </update>
+    <delete id="remove">
+--          通过用户ID删除用户
+        delete from t_user where user_id = #{id}
+    </delete>
+    <delete id="revoke">
+        delete from t_user_role where role_id = #{roleId} and user_id = #{userId}
+    </delete>
+
+    <select id="findByUserName" resultMap="userMap">
+ /*
+ 通过用户名称查询
+ */
+        select *
+        from t_user as u
+            left join t_image as i on i.image_id = u.avatar where login_name = #{username}
+    </select>
+    <select id="findById" resultMap="BaseResultMap">
+        select * from t_user
+            left join t_image i on t_user.avatar = i.image_id
+        where user_id = #{id}
+    </select>
+    <select id="findAll" resultMap="userMap">
+-- 查询出用户的所有信息包括身份
+        select * from t_user u
+                          left join t_image i
+                                    on u.avatar = i.image_id
+                          left join t_user_role tur on u.user_id = tur.user_id
+                          left join t_role t on tur.role_id = t.role_id
+        order by u.create_time limit #{skip},#{limit}
+    </select>
+    <select id="getCount" resultType="java.lang.Integer">
+        select count(*) from t_user;
+    </select>
+    <select id="findByQuery" resultMap="userMap">
+        select u.*,ti.*,
+        t.role_id as r_role_id,t.name as r_name,
+        t.comment as r_comment,t.create_time as r_create_time,
+        t.update_at as r_update_at,tc.*
+        from t_user u
+        left join t_image ti on ti.image_id = u.avatar
+        left join t_user_role tur on u.user_id = tur.user_id
+        left join t_role t on tur.role_id = t.role_id
+        left join t_class tc on tc.class_id = u.class_id
+        where 1 = 1
+        <foreach collection="query.entrySet()" item="val" index="key" separator=" ">
+            and ${key} like '%${val}%'
+        </foreach>
+        limit #{skip},#{limit}
+    </select>
+    <select id="getCountByQuery" resultType="java.lang.Integer">
+        select count(*) from t_user where 1 = 1
+        <foreach collection="query.entrySet()" item="val" index="key" separator=" ">
+            and ${key} like #{val}
+        </foreach>;
+    </select>
+</mapper>

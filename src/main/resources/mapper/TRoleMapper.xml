@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.mrhui.automatic.mapper.TRoleMapper">
+
+    <resultMap id="BaseResultMap" type="com.mrhui.automatic.entity.TRole">
+            <id property="roleId" column="role_id" jdbcType="VARCHAR"/>
+            <result property="name" column="name" jdbcType="VARCHAR"/>
+            <result property="comment" column="comment" jdbcType="VARCHAR"/>
+            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+            <result property="updateAt" column="update_at" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <resultMap id="roleMap" type="com.mrhui.automatic.entity.TRole" extends="BaseResultMap">
+        <collection property="permissions"
+                    columnPrefix="per_"
+                    javaType="java.util.ArrayList"
+                    resultMap="com.mrhui.automatic.mapper.TPermissionsMapper.BaseResultMap">
+        </collection>
+    </resultMap>
+    <sql id="Base_Column_List">
+        role_id,name,comment,
+        create_time,update_at
+    </sql>
+    <delete id="deleteByRoleId">
+        delete from t_role where role_id = #{id}
+    </delete>
+    <select id="getCount" resultType="int">
+        select count(*) from t_role
+    </select>
+    <select id="findAll" resultMap="roleMap">
+        select * from t_role
+            left join t_role_permissions trp on t_role.role_id = trp.role_id
+            left join t_permissions tp on trp.permissions_id = tp.permissions_id order by t_role.create_time limit #{skip},#{limit}
+    </select>
+    <select id="findByUserId" resultMap="BaseResultMap">
+        select * from t_role
+            left join t_user_role tur
+                on t_role.role_id = tur.role_id where user_id = #{id};
+    </select>
+    <select id="findByQuery" resultMap="roleMap">
+        select t_role.*,
+               tp.permissions_id as per_permissions_id,
+               tp.comment as per_comment,
+               tp.title as per_title,tp.code as per_code,
+               tp.create_time as per_create_time,
+               tp.update_at as per_update_at
+        from t_role
+        left join t_role_permissions trp on t_role.role_id = trp.role_id
+        left join t_permissions tp on tp.permissions_id = trp.permissions_id
+        where 1 = 1
+        <foreach collection="query.entrySet()" item="val" index="key" separator=" ">
+            and ${key} like '%${val}%'
+        </foreach>
+        limit #{skip},#{limit}
+    </select>
+    <insert id="add" useGeneratedKeys="true">
+        insert into t_role(role_id, name,comment)
+        VALUES(#{role.roleId},#{role.name},#{role.comment});
+    </insert>
+    <insert id="addPermissions">
+        insert into t_role_permissions(permissions_id, role_id) VALUES (#{per_id},#{role_id})
+    </insert>
+</mapper>
