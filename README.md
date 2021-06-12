@@ -23,4 +23,5 @@ public static int WS_SEND_MESSAGE = 110;// 管理员发送消息 对应回复代
     public static int LOG_USER_LOGOUT = 1001;// 用户退出登录
     public static int LOG_FACE_RECOGNITION = 1002;// 人脸识别
 ```
-    
+
+
