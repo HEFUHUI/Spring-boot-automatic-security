@@ -2,14 +2,16 @@ package com.mrhui.automatic.service.impl;
 
 import com.google.gson.Gson;
 import com.mrhui.automatic.entity.TUser;
-import com.mrhui.automatic.pojo.Page;
-import com.mrhui.automatic.pojo.StandardResult;
+import com.mrhui.automatic.entity.vo.UserVO;
 import com.mrhui.automatic.pojo.ProjectConfig;
+import com.mrhui.automatic.pojo.StandardResult;
 import com.mrhui.automatic.pojo.WebsocketClient;
+import com.mrhui.automatic.pojo.WebsocketReceive;
 import com.mrhui.automatic.service.LoggingService;
 import com.mrhui.automatic.service.TUserService;
 import com.mrhui.automatic.service.WebSocketService;
 import com.mrhui.automatic.utils.MD5;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,12 +19,13 @@ import javax.websocket.Session;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Hashtable;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static com.mrhui.automatic.pojo.Common.*;
 
 @Service
+@Slf4j
 public class WebSocketServiceImpl implements WebSocketService {
 
     @Autowired
@@ -40,21 +43,54 @@ public class WebSocketServiceImpl implements WebSocketService {
     @Autowired
     Gson gson;
 
-    /**
-     * 发送给所有管理员
-     * @param message String
-     */
     @Override
-    public void sendAllAdmin(String message) {
-
+    public void onOpen(Session session, UserVO userVO) {
+        websocketClients.add(session);
+        if(userVO!=null){
+            certifiedHashTable.put(userVO.getUser().getUserId(),new WebsocketClient(session,userVO.getUser()));
+            onlineUsers.add(userVO.getUser());
+        }else{
+            notCertifiedHashTable.put(session.getId(),new WebsocketClient(session,null));
+            sendWithSession(StandardResult.failed("请提供身份信息！"),session);
+        }
     }
 
-    /**
-     * 发送给所有设备
-     * @param message String
-     */
     @Override
-    public void sendAllEqu(String message) {
+    public void onClose(Session session,UserVO userVO) {
+        websocketClients.remove(session);
+        if(userVO!=null){
+            certifiedHashTable.remove(userVO.getUser().getUserId());
+            onlineUsers.remove(userVO.getUser());
+        }else{
+            notCertifiedHashTable.remove(session.getId());
+        }
+    }
+
+    @Override
+    public void onError(Session session, Throwable throwable) { }
+
+    @Override
+    public void onMessage(Session session, String message,UserVO userVO) {
+        final WebsocketReceive websocketReceive = gson.fromJson(message, WebsocketReceive.class);
+        log.info("websocketReceive={}",websocketReceive);
+        if (websocketReceive.getCode() == WS_BROADCAST) {
+            websocketClients.forEach(sion->sion.getAsyncRemote().sendText(message));
+        } else {
+            log.info("WS：{}", message);
+        }
+    }
+
+    @Override
+    public void broadWithUserType(Object message, int userType) {
+        certifiedHashTable.forEach((key,websocketClient)->{
+            if(websocketClient.getUser().getUserType() == userType){
+                try {
+                    websocketClient.getSession().getAsyncRemote().sendText(gson.toJson(message));
+                }catch(Exception e){
+                    log.error("发送消息到用户 {} 失败：{}",websocketClient.getUser().getUserId(),e.getMessage());
+                }
+            }
+        });
     }
 
     /**
@@ -62,19 +98,17 @@ public class WebSocketServiceImpl implements WebSocketService {
      * @param message String
      */
     @Override
-    public void sendAll(String message) {
+    public void broadcast(Object message) {
+        websocketClients.forEach(session -> session.getAsyncRemote().sendText(gson.toJson(message)));
     }
 
-    /**
-     * 发送给所有学生
-     * @param message 消息体 String
-     */
-    @Override
-    public void sendStudent(String message) {
-    }
 
     @Override
     public void sendWithUserId(String userId,Object message) {
+        final WebsocketClient websocketClient = certifiedHashTable.get(userId);
+        if (websocketClient!=null) {
+            websocketClient.getSession().getAsyncRemote().sendText(gson.toJson(message));
+        }
     }
 
     /**
@@ -83,7 +117,12 @@ public class WebSocketServiceImpl implements WebSocketService {
      * @param sid Session ID
      */
     @Override
-    public void sendWithSessionId(String message, String sid) {
+    public void sendWithSessionId(Object message, String sid) {
+        websocketClients.forEach(session -> {
+            if(session.getId().equals(sid)){
+                session.getAsyncRemote().sendText(gson.toJson(message));
+            }
+        });
     }
 
     /**
@@ -120,14 +159,5 @@ public class WebSocketServiceImpl implements WebSocketService {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    /**
-     * 发送命令 ----- 到设备
-     * @param destination String 目标设备UserId
-     * @param data 携带数据 Object
-     */
-    @Override
-    public void sendCommand(String destination, Object data) {
     }
 }

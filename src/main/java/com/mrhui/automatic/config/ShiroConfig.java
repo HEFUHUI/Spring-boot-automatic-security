@@ -29,7 +29,7 @@ public class ShiroConfig {
         //设置不需要验证的页面
         filterMap.put("/auth/**", "anon");
         filterMap.put("/send", "anon");
-        filterMap.put("/websocket/**", "anon");
+        filterMap.put("/ws", "anon");
         filterMap.put("/index/**", "anon");
         filterMap.put("/js/**", "anon");
         filterMap.put("/image/get/*", "anon");

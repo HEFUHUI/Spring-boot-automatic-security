@@ -8,6 +8,9 @@ import locale from 'element-ui/lib/locale/lang/zh-CN'
 import './styles.scss'
 import './plugins/DataFormat'
 import * as echarts from 'echarts'
+import JsonViewer from 'vue-json-viewer'
+Vue.use(JsonViewer)
+
 
 Vue.use(ElementUI, { locale })
 Vue.prototype.$echarts = echarts

@@ -32,7 +32,7 @@ public class WebSocketConfig extends ServerEndpointConfig.Configurator{
             // 取出Session中的用户信息
             sec.getUserProperties().put("user", SecurityUtils.getSubject().getPrincipal());
         }catch (Exception e){
-            log.error("通过请求头获取用户信息失败：{}",e.getMessage());
+            log.warn("用户未认证");
         }
         super.modifyHandshake(sec, request, response);
     }

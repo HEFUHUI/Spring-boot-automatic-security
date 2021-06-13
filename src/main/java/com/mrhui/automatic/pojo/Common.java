@@ -9,10 +9,11 @@ public interface Common {
     //对应userType   ----- end
 
     //websocket接收命令
-    public static int WS_COMMAND = 120;//发送到设备上面
-    public static int WS_LOGOUT = 2; // 登出
+    public static int WS_LOGOUT = 2; // 有用户登出
+    public static int WS_BROADCAST = 111; // 有用户登出
     public static int WS_GET_INFO = 100;// 管理员获取信息 对应回复代码 101
     public static int WS_SEND_MESSAGE = 110;// 管理员发送消息 对应回复代码 111
+    public static int WS_COMMAND = 120;//发送到设备上面
 
 
     //LoggingType 日志类型

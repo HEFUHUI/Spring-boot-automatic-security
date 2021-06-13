@@ -68,7 +68,7 @@ _axios.interceptors.response.use(
 );
 let ws;
 function connectWS(){
-  ws = new WebSocket(`ws://${config.host}/websocket/DEBUG/USER/?token=${sessionStorage.getItem("sessionsID")}`);
+  ws = new WebSocket(`ws://${config.host}/ws?token=${sessionStorage.getItem("sessionsID")}`);
 }
 connectWS();
 
@@ -106,10 +106,9 @@ ws.onmessage = (data)=>{
   app.$emit("ws-message",data)
 }
 ws.onclose = ()=>{
-  let n = Notification({type:"error",title:"已断开服务器连接!",duration:0,message:"点击重试！",showClose:true,
+  let n = Notification({type:"error",title:"已断开服务器连接!",duration:0,message:"点击忽略！",showClose:true,
     onClick(){
       n.close()
-      connectWS();
     }})
 }
 ws.onerror = (err)=>{

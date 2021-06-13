@@ -15,9 +15,8 @@
           </el-form-item>
           <el-form-item>
             <div>
-              <p v-for="(msg,index) in msgs" :key="msg+index">
-                {{ msg }}
-              </p>
+              <json-viewer v-for="(msg,index) in msgs" :key="msg+index" :value="msg" :expand-depth="4" copyable sort>
+              </json-viewer>
             </div>
           </el-form-item>
         </el-form>
@@ -31,7 +30,7 @@
 
 <script>
 import hOnlineUsers from "../../components/OnlineUsers"
-import {GET_INFO, SEND_MESSAGE} from "../../plugins/Commen"
+import {GET_INFO, SEND_MESSAGE} from "@/plugins/Commen"
 
 export default {
   name: "DeBug.vue",
@@ -54,10 +53,11 @@ export default {
     hOnlineUsers
   },
   methods: {
-    async send() {
-      await this.$axios.post(`send`, {
-        msg: this.input
-      })
+    send() {
+      this.$ws.send(JSON.stringify({
+        code:111,
+        data:this.input
+      }))
     },
     async fetch() {
       this.$ws.send(JSON.stringify({

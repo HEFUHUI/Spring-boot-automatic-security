@@ -6,6 +6,7 @@ import com.mrhui.automatic.pojo.StandardResult;
 import com.mrhui.automatic.service.TClassService;
 import com.mrhui.automatic.service.TUserService;
 import com.mrhui.automatic.service.WebSocketService;
+import com.mrhui.automatic.service.impl.WebSocketServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,12 +37,5 @@ public class HomeController {
         UserVO tUser = (UserVO) SecurityUtils.getSubject().getPrincipal();
         model.addAttribute("user",tUser);
         return "index";
-    }
-
-    @PostMapping("/send")
-    @ResponseBody
-    public StandardResult<String> send(@RequestBody Map<String,Object> str){
-        webSocketService.sendAll(str.get("msg").toString());
-        return StandardResult.success("发送成功", HttpStatus.OK.value());
     }
 }

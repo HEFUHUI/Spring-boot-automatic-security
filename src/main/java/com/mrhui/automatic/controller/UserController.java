@@ -1,15 +1,15 @@
 package com.mrhui.automatic.controller;
 
 import com.mrhui.automatic.controller.abstracts.CrudControllerA;
-import com.mrhui.automatic.entity.TImage;
 import com.mrhui.automatic.entity.TRole;
 import com.mrhui.automatic.entity.TUser;
 import com.mrhui.automatic.entity.vo.UserVO;
-import com.mrhui.automatic.exception.ParamsException;
 import com.mrhui.automatic.pojo.Page;
 import com.mrhui.automatic.pojo.StandardResult;
-import com.mrhui.automatic.pojo.WebsocketClient;
-import com.mrhui.automatic.service.*;
+import com.mrhui.automatic.service.LoggingService;
+import com.mrhui.automatic.service.TImageService;
+import com.mrhui.automatic.service.TRoleService;
+import com.mrhui.automatic.service.TUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
@@ -18,18 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.ResourceUtils;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.websocket.Session;
-import java.io.File;
-import java.io.IOException;
-import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.SubmissionPublisher;
 
 @Controller
 @Slf4j
@@ -167,37 +158,5 @@ public class UserController extends CrudControllerA<TUser> {
             return StandardResult.success(HttpStatus.NO_CONTENT.value());
         }
         return StandardResult.failed(HttpStatus.NOT_ACCEPTABLE.value());
-    }
-
-
-    /**
-     *
-     * @param avatar 用户头像
-     * @param user 用户信息
-     * @return String template
-     * @throws IOException 写入图片可能出错!!!
-     */
-    @PostMapping("/add")
-    public String addUser(@RequestParam("ava") MultipartFile avatar,TUser user) throws IOException {
-        // 获取上传路径
-        String path = ResourceUtils.getURL("classpath:").getPath()+"static/images/";
-        TImage image = new TImage();
-        // 判断用户是否上传图片,未上传则跳过
-        if(!avatar.isEmpty()){
-            avatar.transferTo(new File(path+avatar.getOriginalFilename()));
-            image.setAlias(avatar.getOriginalFilename());
-            image.setUrl(avatar.getOriginalFilename());
-            //添加到数据库
-            imageService.add(image);
-            //将刚刚添加到数据库的图片设置为用户头像
-        }
-        user.setAvatar(image);
-       try{
-           //添加到数据库
-           userService.add(user);
-       }catch (Exception e){
-           return "redirect:/error";
-       }
-        return "redirect:/user/index";
     }
 }
