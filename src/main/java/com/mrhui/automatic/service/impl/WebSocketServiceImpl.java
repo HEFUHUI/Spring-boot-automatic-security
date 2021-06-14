@@ -12,6 +12,7 @@ import com.mrhui.automatic.service.TUserService;
 import com.mrhui.automatic.service.WebSocketService;
 import com.mrhui.automatic.utils.MD5;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,8 +20,8 @@ import javax.websocket.Session;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Base64;
-import java.util.Hashtable;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.LinkedList;
+import java.util.List;
 
 import static com.mrhui.automatic.pojo.Common.*;
 
@@ -49,9 +50,10 @@ public class WebSocketServiceImpl implements WebSocketService {
         if(userVO!=null){
             certifiedHashTable.put(userVO.getUser().getUserId(),new WebsocketClient(session,userVO.getUser()));
             onlineUsers.add(userVO.getUser());
+            broadWithUserType(gson.toJson(StandardResult.success("新用户登录",WS_UPDATE_INFO,userVO.getUser())),TYPE_ADMIN);
         }else{
             notCertifiedHashTable.put(session.getId(),new WebsocketClient(session,null));
-            sendWithSession(StandardResult.failed("请提供身份信息！"),session);
+            sendWithSession(StandardResult.failed("请提供身份信息！",4001),session);
         }
     }
 
@@ -61,31 +63,147 @@ public class WebSocketServiceImpl implements WebSocketService {
         if(userVO!=null){
             certifiedHashTable.remove(userVO.getUser().getUserId());
             onlineUsers.remove(userVO.getUser());
+            broadWithUserType(gson.toJson(StandardResult.success("用户离线",WS_LOGOUT,userVO.getUser())),TYPE_ADMIN);
         }else{
             notCertifiedHashTable.remove(session.getId());
         }
     }
 
     @Override
-    public void onError(Session session, Throwable throwable) { }
+    public void onError(Session session, Throwable throwable) {
+        // TODO: 2021/6/13 发生错误的处理
+    }
 
+    /**
+     * 接收信息
+     * 大致流程：
+     *
+     * @param session 会话信息
+     * @param message 消息体
+     * @param userVO 发送者用户信息
+     */
     @Override
     public void onMessage(Session session, String message,UserVO userVO) {
-        final WebsocketReceive websocketReceive = gson.fromJson(message, WebsocketReceive.class);
-        log.info("websocketReceive={}",websocketReceive);
-        if (websocketReceive.getCode() == WS_BROADCAST) {
-            websocketClients.forEach(sion->sion.getAsyncRemote().sendText(message));
-        } else {
-            log.info("WS：{}", message);
+        if (userVO == null) {
+            broadWithUserType("匿名用户发送消息："+message,TYPE_ADMIN);
+            return;
+        }
+        TUser user = userVO.getUser();
+        try {
+            //解析JSON数据
+            WebsocketReceive websocketReceive = gson.fromJson(message, WebsocketReceive.class);
+            log.info("websocketReceive={}",websocketReceive);
+            int code = websocketReceive.getCode();
+            if (code >= WS_BROADCAST && code <= WS_GET_INFO) {
+                if(user.getUserType()==0||user.getUserType()==2){
+                    broadcast(websocketReceive,user);
+                }else{
+                    sendWithSession(StandardResult.failed("无权限！广播失败",WS_ERROR_USER_UNAUTHORIZED),session);
+                }
+            } else if(code >= WS_GET_INFO && code <= WS_SEND_MESSAGE){
+                if(user.getUserType()==0||user.getUserType()==2){
+                    //权限控制
+                    getInfo(websocketReceive,session);
+                }else{
+                    sendWithSession(StandardResult.failed("无权限！获取失败",WS_ERROR_USER_UNAUTHORIZED),session);
+                }
+            }else if(code >= WS_SEND_MESSAGE && code <= WS_SEND_COMMEND){
+                sendMessage(websocketReceive,user);
+            }else if(code >= WS_SEND_COMMEND && code <= 500){
+                if(user.getUserType() == 0 || user.getUserType()==2){
+                    //权限控制
+                    sendCommend(websocketReceive,user);
+                }else{
+                    sendWithSession(StandardResult.failed("无权限！发送失败",WS_ERROR_USER_UNAUTHORIZED),session);
+                }
+            }
+        }catch (Exception e){
+            log.error("用户{}发送的数据解析发生错误！",user.getUserId());
+            broadWithUserType(message,TYPE_ADMIN);
+        }
+
+    }
+
+    private void sendMessage(WebsocketReceive receive, TUser user) {
+        int code = receive.getCode();
+        if(code == WS_SEND_MESSAGE+1){
+            sendWithUserId(receive.getDestination(),StandardResult.success("有消息",WS_SEND_MESSAGE+11,receive.getData(),user));
+        }
+    }
+    private void sendCommend(WebsocketReceive receive, TUser user) {
+        if (receive.getCode() == WS_SEND_COMMEND+1) {
+            // TODO: 2021/6/13 发送命令到设备
         }
     }
 
+    /**
+     * 广播消息处理
+     * @param receive 接收对象
+     * @param user 发送者的信息
+     */
+    private void broadcast(WebsocketReceive receive,TUser user){
+        val code = receive.getCode();
+        try {
+            if (code == WS_BROADCAST+1) {
+                send_broadcast(receive, user,TYPE_ADMIN);
+            }else if(code == WS_BROADCAST+2){
+                send_broadcast(receive, user, TYPE_STUDENT);
+            }else if(code==WS_BROADCAST+3){
+                send_broadcast(receive, user, TYPE_HARDWARE);
+            }else if(code==WS_BROADCAST+4){
+                broadcast(StandardResult.success("收到消息",WS_BROADCAST,receive.getData(),user));
+            }
+        }catch (Exception e){
+            sendWithUserId(user.getUserId(),StandardResult.failed("服务器错误",WS_SERVER_ERROR));
+        }
+    }
+
+    private void send_broadcast(WebsocketReceive receive, TUser user,int userType) {
+        broadWithUserType(gson.toJson(StandardResult.success("收到消息", WS_BROADCAST, receive.getData(), user)), userType);
+    }
+
+    private void getInfo(WebsocketReceive receive,Session session) {
+        val code = receive.getCode();
+        try {
+            if(code == WS_GET_INFO+1){
+                sendUserInfo(session,WS_GET_INFO + 11,TYPE_ADMIN);
+            }else if(code == WS_GET_INFO+2){
+                sendUserInfo(session, WS_GET_INFO+12,TYPE_STUDENT);
+            }else if(code == WS_GET_INFO+3){
+                sendUserInfo(session,  WS_GET_INFO+13,+TYPE_HARDWARE);
+            }else if(code == WS_GET_INFO+4){
+                sendWithSession(StandardResult.success("获取成功",WS_GET_INFO+14,onlineUsers),session);
+            }else if(code == WS_GET_INFO+5){
+                sendWithSession(StandardResult.success("获取成功",WS_GET_INFO+15,isOnline(receive.getData().toString())),session);
+            }
+        }catch (Exception e){
+            sendWithSession(StandardResult.failed("获取失败",WS_ERROR_GET_INFO_FAIL),session);
+        }
+    }
+
+    private void sendUserInfo(Session session, int returnCode, int userType) {
+        sendWithSession(StandardResult.success("获取信息", returnCode,getAllOnlineWithType(userType)), session);
+    }
+    private boolean isOnline(String userId){
+        return certifiedHashTable.get(userId) != null;
+    }
+
+    private List<TUser> getAllOnlineWithType(int userType){
+        List<TUser> users = new LinkedList<>();
+        for (TUser onlineUser : onlineUsers) {
+            if(onlineUser.getUserType() == userType){
+                users.add(onlineUser);
+            }
+        }
+        return users;
+    }
+
     @Override
-    public void broadWithUserType(Object message, int userType) {
+    public void broadWithUserType(String message, int userType) {
         certifiedHashTable.forEach((key,websocketClient)->{
             if(websocketClient.getUser().getUserType() == userType){
                 try {
-                    websocketClient.getSession().getAsyncRemote().sendText(gson.toJson(message));
+                    websocketClient.getSession().getAsyncRemote().sendText(message);
                 }catch(Exception e){
                     log.error("发送消息到用户 {} 失败：{}",websocketClient.getUser().getUserId(),e.getMessage());
                 }

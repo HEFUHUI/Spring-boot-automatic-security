@@ -15,7 +15,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class AutomaticApplication {
     public static void main(String[] args) {
         SpringApplication.run(AutomaticApplication.class, args);
-        //加载opencv_dll
-        System.load(SpringUtil.getBean(ProjectConfig.class).getDllPath());
     }
 }

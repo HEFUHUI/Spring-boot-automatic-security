@@ -6,7 +6,7 @@ import { Loading, Message,Notification } from "element-ui"
 
 export let config = {
   host: process.env.VUE_APP_baseURL || "192.168.2.185:8081",
-  timeout: 60 * 1000,
+  timeout: 8000,
 };
 const _axios = axios.create({
   baseURL: 'http://'+config.host,
@@ -102,13 +102,20 @@ Plugin.install = function(Vue) {
 };
 Vue.use(Plugin);
 ws.onmessage = (data)=>{
-  console.log(data)
+  try{
+    const res = JSON.parse(data.data);
+    if(res.code>=4000){
+      Message({type:"error",message:`${res.msg}，状态码：${res.code}`})
+    }
+  }catch (e){
+    console.log(e)
+  }
   app.$emit("ws-message",data)
 }
 ws.onclose = ()=>{
-  let n = Notification({type:"error",title:"已断开服务器连接!",duration:0,message:"点击忽略！",showClose:true,
+  Notification({type:"error",title:"已断开服务器连接!",duration:0,message:"点击重试！",showClose:true,
     onClick(){
-      n.close()
+      window.location.reload();
     }})
 }
 ws.onerror = (err)=>{

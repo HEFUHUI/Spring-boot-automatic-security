@@ -27,7 +27,7 @@ public interface WebSocketService {
     void onClose(Session session,UserVO userVO);
     void onError(Session session,Throwable throwable);
     void onMessage(Session session,String message,UserVO userVO);
-    void broadWithUserType(Object message, int userType);
+    void broadWithUserType(String message, int userType);
     void broadcast(Object message);
     void sendWithUserId(String userId,Object message);
     void sendWithSessionId(Object message, String sid);

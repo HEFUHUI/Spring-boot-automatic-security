@@ -1,8 +1,10 @@
 package com.mrhui.automatic.config;
 
+import com.mrhui.automatic.interceptor.ShiroSessionListen;
 import com.mrhui.automatic.realm.UserRealm;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.session.SessionListener;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
@@ -11,6 +13,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -98,8 +102,16 @@ public class ShiroConfig {
     }
 
     @Bean
-    public DefaultWebSessionManager sessionManager(){
+    public ShiroSessionListen sessionListen(){
+        return new ShiroSessionListen();
+    }
+
+    @Bean
+    public DefaultWebSessionManager sessionManager(@Qualifier("sessionListen") ShiroSessionListen sessionListen){
+        Collection<SessionListener> listeners = new ArrayList<SessionListener>();
+        listeners.add(sessionListen);
         MyWebSessionManager myWebSessionManager = new MyWebSessionManager();
+        myWebSessionManager.setSessionListeners(listeners);
         myWebSessionManager.setSessionIdUrlRewritingEnabled(false);
         return myWebSessionManager;
     }

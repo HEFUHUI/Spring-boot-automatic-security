@@ -7,28 +7,33 @@
       </div>
       <el-table
           :border="false"
-          :data="userList"
+          :data="users"
           style="width: 100%">
         <el-table-column
             label="头像">
           <template slot-scope="{row}">
-            <el-image :preview-src-list="[$axios.defaults.baseURL+'/image/get/'+(row.data.avatar && row.data.avatar.imageId)]" :src="$axios.defaults.baseURL+'/image/get/'+(row.data.avatar && row.data.avatar.imageId)" class="avatar"></el-image>
+            <el-image :preview-src-list="[$axios.defaults.baseURL+'/image/get/'+(row.avatar && row.avatar.imageId)]" :src="$axios.defaults.baseURL+'/image/get/'+(row.avatar && row.avatar.imageId)" class="avatar"></el-image>
           </template>
         </el-table-column>
         <el-table-column
-            prop="data.nickName"
+            prop="nickName"
             label="昵称"
             width="180">
         </el-table-column>
         <el-table-column
-            prop="data.userId"
+            prop="userId"
             label="用户ID">
         </el-table-column>
         <el-table-column
             label="操作">
           <template slot-scope="{row}">
-            <el-button type="primary" size="mini" icon="el-icon-s-promotion" @click="current_user = row.data;dialogVisible = true">发送消息</el-button>
-            <el-button type="warning" size="mini" icon="el-icon-delete" @click="current_user = row.data;dialogVisible = true">下线用户</el-button>
+            <template v-if="row.userId !== userInfo.user.userId">
+              <el-button type="primary" size="mini" icon="el-icon-s-promotion" @click="current_user = row;dialogVisible = true"></el-button>
+              <el-button type="warning" size="mini" icon="el-icon-delete" @click="current_user = row;dialogVisible = true"></el-button>
+            </template>
+            <template v-else>
+              <el-button type="primary" disabled size="mini">自己</el-button>
+            </template>
           </template>
         </el-table-column>
       </el-table>
@@ -54,7 +59,6 @@ export default {
   data() {
     return {
       input:"",
-      userList: [],
       dialogVisible:false,
       current_user:{},
     }
@@ -65,22 +69,18 @@ export default {
   methods:{
     send(){
       this.$ws.send(JSON.stringify({
-        code:110,
+        code:301,
+        destination:this.current_user.userId,
         data:{
-          destination:this.current_user.userId,
           data:this.input
         }
       }))
     },
-    fetch(){
-      this.userList = [];
-      this.users.forEach(async id => {
-        if(id !== this.userInfo.user.userId){
-          const res = await this.$axios.get(`user/${id}`);
-          this.userList.push(res.data)
-        }
-      })
-    }
+    async fetch() {
+      this.$ws.send(JSON.stringify({
+        code: 204
+      }))
+    },
   },
   computed:{
     userInfo(){
@@ -88,7 +88,6 @@ export default {
     }
   },
   created() {
-    this.fetch();
   }
 }
 </script>

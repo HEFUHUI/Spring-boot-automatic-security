@@ -6,6 +6,7 @@ import lombok.Data;
 public class WebsocketReceive {
     private int code;
     private Object data;
+    private String destination;
     private int isPage = 0;
     private Paging paging = new Paging();
 }

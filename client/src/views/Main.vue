@@ -97,7 +97,7 @@
 <script>
 import hOnlineUsers from "../components/OnlineUsers";
 import hChar from "../components/Chat";
-import {GET_INFO,SEND_MESSAGE} from "../plugins/Commen";
+import {GET_INFO} from "../plugins/Commen";
 export default {
   data() {
     return {
@@ -172,7 +172,7 @@ export default {
             this.users.push(data.data[key])
           }
           break;
-        case SEND_MESSAGE+1:
+        case 311:
           if(!this.messageDialog){
             this.unread++;
           }
