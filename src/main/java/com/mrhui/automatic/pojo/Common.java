@@ -20,6 +20,7 @@ public interface Common {
     public static int WS_ERROR_GET_INFO_FAIL = 4005;
     public static int WS_ERROR_USER_UNAUTHORIZED = 4001;
     public static int WS_SERVER_ERROR = 4006;
+    public static int WS_OCCUPY = 4002;
 
 
     //LoggingType 日志类型

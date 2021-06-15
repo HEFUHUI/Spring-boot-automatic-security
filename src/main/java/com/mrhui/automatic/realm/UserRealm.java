@@ -88,7 +88,12 @@ public class UserRealm extends AuthorizingRealm {
                 ByteSource.Util.bytes(user.getLoginName()),
                 getName());
         //更新用户为登录状态
-        loggingService.login(true,user.getUserId(),"登录成功!");
+//        loggingService.login(true,user.getUserId(),"登录成功!");
+        val sessionId = SecurityUtils.getSubject().getSession().getId();
+        val host = SecurityUtils.getSubject().getSession().getHost();
+        user.setSessionId(sessionId.toString());
+        user.setLoginIp(host);
         return simpleAuthenticationInfo;
+
     }
 }

@@ -5,7 +5,7 @@ import axios from "axios";
 import { Loading, Message,Notification } from "element-ui"
 
 export let config = {
-  host: process.env.VUE_APP_baseURL || "192.168.2.185:8081",
+  host: process.env.VUE_APP_baseURL || "localhost:8081",
   timeout: 8000,
 };
 const _axios = axios.create({

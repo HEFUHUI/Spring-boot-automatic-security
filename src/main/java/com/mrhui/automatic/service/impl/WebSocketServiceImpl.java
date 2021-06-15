@@ -45,23 +45,23 @@ public class WebSocketServiceImpl implements WebSocketService {
     Gson gson;
 
     @Override
-    public void onOpen(Session session, UserVO userVO) {
+    public void onOpen(Session session, UserVO userVO, String sessionId) {
         websocketClients.add(session);
         if(userVO!=null){
-            certifiedHashTable.put(userVO.getUser().getUserId(),new WebsocketClient(session,userVO.getUser()));
+            certifiedHashTable.put(sessionId,new WebsocketClient(session,userVO.getUser()));
             onlineUsers.add(userVO.getUser());
             broadWithUserType(gson.toJson(StandardResult.success("新用户登录",WS_UPDATE_INFO,userVO.getUser())),TYPE_ADMIN);
         }else{
-            notCertifiedHashTable.put(session.getId(),new WebsocketClient(session,null));
-            sendWithSession(StandardResult.failed("请提供身份信息！",4001),session);
+            notCertifiedHashTable.put(sessionId,new WebsocketClient(session,null));
+            sendWithSession(StandardResult.failed("请提供身份信息！",WS_ERROR_USER_UNAUTHORIZED),session);
         }
     }
 
     @Override
-    public void onClose(Session session,UserVO userVO) {
+    public void onClose(Session session, UserVO userVO, String sessionId) {
         websocketClients.remove(session);
         if(userVO!=null){
-            certifiedHashTable.remove(userVO.getUser().getUserId());
+            certifiedHashTable.remove(sessionId);
             onlineUsers.remove(userVO.getUser());
             broadWithUserType(gson.toJson(StandardResult.success("用户离线",WS_LOGOUT,userVO.getUser())),TYPE_ADMIN);
         }else{
@@ -77,13 +77,13 @@ public class WebSocketServiceImpl implements WebSocketService {
     /**
      * 接收信息
      * 大致流程：
-     *
-     * @param session 会话信息
+     *  @param session 会话信息
      * @param message 消息体
      * @param userVO 发送者用户信息
+     * @param sessionId HTTP会话ID
      */
     @Override
-    public void onMessage(Session session, String message,UserVO userVO) {
+    public void onMessage(Session session, String message, UserVO userVO, String sessionId) {
         if (userVO == null) {
             broadWithUserType("匿名用户发送消息："+message,TYPE_ADMIN);
             return;
@@ -127,9 +127,10 @@ public class WebSocketServiceImpl implements WebSocketService {
     private void sendMessage(WebsocketReceive receive, TUser user) {
         int code = receive.getCode();
         if(code == WS_SEND_MESSAGE+1){
-            sendWithUserId(receive.getDestination(),StandardResult.success("有消息",WS_SEND_MESSAGE+11,receive.getData(),user));
+           sendWithHttpSessionId(receive.getDestination(),StandardResult.success("有消息",WS_SEND_MESSAGE+11,receive.getData(),user));
         }
     }
+
     private void sendCommend(WebsocketReceive receive, TUser user) {
         if (receive.getCode() == WS_SEND_COMMEND+1) {
             // TODO: 2021/6/13 发送命令到设备
@@ -223,9 +224,18 @@ public class WebSocketServiceImpl implements WebSocketService {
 
     @Override
     public void sendWithUserId(String userId,Object message) {
-        final WebsocketClient websocketClient = certifiedHashTable.get(userId);
-        if (websocketClient!=null) {
-            websocketClient.getSession().getAsyncRemote().sendText(gson.toJson(message));
+        certifiedHashTable.forEach(((s, websocketClient) -> {
+            if(websocketClient.getUser().getUserId().equals(userId)){
+                websocketClient.getSession().getAsyncRemote().sendText(gson.toJson(message));
+            }
+        }));
+    }
+
+    @Override
+    public void sendWithHttpSessionId(String sessionId, Object message) {
+        val session = certifiedHashTable.get(sessionId).getSession();
+        if(session.isOpen()){
+            session.getAsyncRemote().sendText(gson.toJson(message));
         }
     }
 

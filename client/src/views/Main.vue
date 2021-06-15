@@ -97,7 +97,6 @@
 <script>
 import hOnlineUsers from "../components/OnlineUsers";
 import hChar from "../components/Chat";
-import {GET_INFO} from "../plugins/Commen";
 export default {
   data() {
     return {
@@ -166,7 +165,7 @@ export default {
     this.$eventBus.$on("ws-message",d=>{
       const data = JSON.parse(d.data);
       switch (data.code){
-        case GET_INFO+1:
+        case 214:
           this.users = [];
           for(let key in data.data){
             this.users.push(data.data[key])

@@ -31,6 +31,7 @@ public class WebSocketConfig extends ServerEndpointConfig.Configurator{
         try {
             // 取出Session中的用户信息
             sec.getUserProperties().put("user", SecurityUtils.getSubject().getPrincipal());
+            sec.getUserProperties().put("sessionId", SecurityUtils.getSubject().getSession().getId());
         }catch (Exception e){
             log.warn("用户未认证");
         }

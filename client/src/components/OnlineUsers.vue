@@ -21,15 +21,15 @@
             width="180">
         </el-table-column>
         <el-table-column
-            prop="userId"
-            label="用户ID">
+            prop="loginIp"
+            label="登录IP">
         </el-table-column>
         <el-table-column
             label="操作">
           <template slot-scope="{row}">
-            <template v-if="row.userId !== userInfo.user.userId">
-              <el-button type="primary" size="mini" icon="el-icon-s-promotion" @click="current_user = row;dialogVisible = true"></el-button>
-              <el-button type="warning" size="mini" icon="el-icon-delete" @click="current_user = row;dialogVisible = true"></el-button>
+              <template v-if="row.sessionId !== sessionId">
+                <el-button type="primary" size="mini" icon="el-icon-s-promotion" @click="current_user = row;dialogVisible = true"></el-button>
+                <el-button type="warning" size="mini" icon="el-icon-delete" @click="current_user = row;dialogVisible = true"></el-button>
             </template>
             <template v-else>
               <el-button type="primary" disabled size="mini">自己</el-button>
@@ -83,6 +83,9 @@ export default {
     },
   },
   computed:{
+    sessionId(){
+      return sessionStorage.getItem("sessionsID");
+    },
     userInfo(){
       return this.$store.getters.userInfo;
     }

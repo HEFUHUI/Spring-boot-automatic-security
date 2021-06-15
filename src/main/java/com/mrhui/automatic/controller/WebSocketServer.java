@@ -26,10 +26,11 @@ public class WebSocketServer {
      * @throws IOException e
      */
     @OnOpen
-    public void onOpen(Session session,  @PathParam("sessionId") String sessionId) throws IOException {
+    public void onOpen(Session session) throws IOException {
         UserVO userVO = (UserVO) session.getUserProperties().get("user");
+        String sessionId = (String) session.getUserProperties().get("sessionId");
         log.info("用户已连接={}",session.getId());
-        webSocketService.onOpen(session,userVO);
+        webSocketService.onOpen(session,userVO,sessionId);
     }
 
     /**
@@ -40,8 +41,9 @@ public class WebSocketServer {
     @OnClose
     public void onClose(Session session) {
         UserVO userVO = (UserVO) session.getUserProperties().get("user");
+        String sessionId = (String) session.getUserProperties().get("sessionId");
         log.info("有用户断开了, id为:{}", session.getId());
-        webSocketService.onClose(session,userVO);
+        webSocketService.onClose(session,userVO,sessionId);
     }
 
     /**
@@ -63,7 +65,8 @@ public class WebSocketServer {
     @OnMessage
     public void onMessage(String message, Session session) {
         UserVO userVO = (UserVO) session.getUserProperties().get("user");
+        String sessionId = (String) session.getUserProperties().get("sessionId");
         log.info("收到用户{}的消息：{}",session.getId(),message);
-        webSocketService.onMessage(session, message,userVO);
+        webSocketService.onMessage(session, message,userVO,sessionId);
     }
 }
