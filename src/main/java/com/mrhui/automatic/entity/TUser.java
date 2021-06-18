@@ -92,7 +92,7 @@ public class TUser implements Serializable {
     /**
      * 班级
      */
-    private TClass tClass;
+    private TClass classes;
 
     private static final long serialVersionUID = 1L;
 }

@@ -100,5 +100,12 @@ export default {
       });
     },
   },
+  created(){
+    document.onkeypress = e=>{
+      if(e.code === "Enter"){
+        this.submitForm();
+      }
+    }
+  }
 };
 </script>

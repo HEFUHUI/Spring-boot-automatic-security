@@ -24,7 +24,8 @@
     </resultMap>
 
     <resultMap id="userMap" type="com.mrhui.automatic.entity.TUser" extends="BaseResultMap">
-        <association property="tClass"
+        <association property="classes"
+                     columnPrefix="tc_"
                      resultMap="com.mrhui.automatic.mapper.TClassMapper.BaseResultMap"
         />
         <collection property="roles"
@@ -120,22 +121,43 @@
  /*
  通过用户名称查询
  */
-        select *
-        from t_user as u
-            left join t_image as i on i.image_id = u.avatar where login_name = #{username}
+ select u.*,ti.*,
+        t.role_id as r_role_id,t.name as r_name,
+        t.comment as r_comment,t.create_time as r_create_time,
+        t.update_at as r_update_at,tc.comment as tc_comment,tc.create_time as tc_create_time,
+        tc.update_at as tc_update_at,tc.name as tc_name,tc.class_id as tc_class_id,tc.is_working as tc_is_working
+ from t_user u
+          left join t_image ti on ti.image_id = u.avatar
+          left join t_user_role tur on u.user_id = tur.user_id
+          left join t_role t on tur.role_id = t.role_id
+          left join t_class tc on tc.class_id = u.class_id
+ where login_name = #{username}
     </select>
-    <select id="findById" resultMap="BaseResultMap">
-        select * from t_user
-            left join t_image i on t_user.avatar = i.image_id
-        where user_id = #{id}
+    <select id="findById" resultMap="userMap">
+        select u.*,ti.*,
+               t.role_id as r_role_id,t.name as r_name,
+               t.comment as r_comment,t.create_time as r_create_time,
+               t.update_at as r_update_at,tc.comment as tc_comment,tc.create_time as tc_create_time,
+               tc.update_at as tc_update_at,tc.name as tc_name,tc.class_id as tc_class_id,tc.is_working as tc_is_working
+        from t_user u
+                left join t_image ti on ti.image_id = u.avatar
+                left join t_user_role tur on u.user_id = tur.user_id
+                left join t_role t on tur.role_id = t.role_id
+                left join t_class tc on tc.class_id = u.class_id
+        where u.user_id = #{id}
     </select>
     <select id="findAll" resultMap="userMap">
 -- 查询出用户的所有信息包括身份
-        select * from t_user u
-                          left join t_image i
-                                    on u.avatar = i.image_id
-                          left join t_user_role tur on u.user_id = tur.user_id
-                          left join t_role t on tur.role_id = t.role_id
+select u.*,ti.*,
+       t.role_id as r_role_id,t.name as r_name,
+       t.comment as r_comment,t.create_time as r_create_time,
+       t.update_at as r_update_at,tc.comment as tc_comment,tc.create_time as tc_create_time,
+       tc.update_at as tc_update_at,tc.name as tc_name,tc.class_id as tc_class_id,tc.is_working as tc_is_working
+from t_user u
+         left join t_image ti on ti.image_id = u.avatar
+         left join t_user_role tur on u.user_id = tur.user_id
+         left join t_role t on tur.role_id = t.role_id
+         left join t_class tc on tc.class_id = u.class_id
         order by u.create_time limit #{skip},#{limit}
     </select>
     <select id="getCount" resultType="java.lang.Integer">
@@ -145,7 +167,8 @@
         select u.*,ti.*,
         t.role_id as r_role_id,t.name as r_name,
         t.comment as r_comment,t.create_time as r_create_time,
-        t.update_at as r_update_at,tc.*
+        t.update_at as r_update_at,tc.comment as tc_comment,tc.create_time as tc_create_time,
+        tc.update_at as tc_update_at,tc.name as tc_name,tc.class_id as tc_class_id,tc.is_working as tc_is_working
         from t_user u
         left join t_image ti on ti.image_id = u.avatar
         left join t_user_role tur on u.user_id = tur.user_id

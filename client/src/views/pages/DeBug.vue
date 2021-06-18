@@ -14,15 +14,28 @@
             <el-button type="primary" @click="send">广播</el-button>
           </el-form-item>
           <el-form-item label="接收消息">
-            <json-viewer :value="msg" v-for="(msg,index) in msgs" :key="msg+index" boxed :expand-depth="0" copyable>
-            </json-viewer>
+            <!-- <div v-for="(msg,index) in msgs" :key="msg+index" >
+              {{msg}}
+            </div> -->
+            <el-button @click="showMsg = true" type="info" size="mini">显示消息</el-button>
           </el-form-item>
         </el-form>
       </el-col>
       <el-col :span="12">
-        <h-online-users :users="users" v-if="showOnlineUser"></h-online-users>
+        <h-online-users></h-online-users>
       </el-col>
     </el-row>
+    <el-dialog title="所有消息" :visible.sync="showMsg" width="60%">
+      <el-button type="warning" size="mini" @click="goBottom">到底部</el-button>
+      <div style="overflow: auto;height: 50vh" ref="msg-content">
+        <h1></h1>
+        <el-card v-for="(msg,index) in msgs" :key="msg+index">
+          <span style="font-size: 18px;color: #409EFF;text-shadow: 2px 2px 10px black">{{ ++index }}</span>
+          <json-viewer :value="msg" :expand-depth="0" copyable>
+          </json-viewer>
+        </el-card>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -36,9 +49,9 @@ export default {
       drawer: false,
       input: "",
       result: "",
-      showOnlineUser: true,
       isConnected: false,
       msgs: [],
+      showMsg:false,
       socketInfo: {
         target: {}
       },
@@ -55,10 +68,10 @@ export default {
   },
   methods: {
     send() {
-      this.$ws.send(JSON.stringify({
-        code: 104,
-        data: this.input
-      }))
+      this.$ws.send(this.input.toString())
+    },
+    goBottom(){
+      this.$refs["msg-content"].scrollTop = this.$refs["msg-content"].scrollHeight;
     },
     async fetch() {
       this.$ws.send(JSON.stringify({
@@ -78,33 +91,11 @@ export default {
       try {
         data = JSON.parse(d.data);
       } catch (e) {
-        data = d;
+        data = d.data;
       }
-      switch (data.code) {
-        case 214:
-          this.users = [];
-          for (let key in data.data) {
-            this.users.push(data.data[key])
-          }
-          this.refresh();
-          break;
-        case 100:
-          try {
-            this.msgs.push(JSON.parse(data.data))
-          }catch (e) {
-            this.msgs.push(data.data);
-          }
-          break;
-        case 1:
-          this.users.push(data.data)
-              break;
-        case 2:
-          this.users = this.users.filter(item=>item.userId!==data.data.userId)
-      }
+      this.msgs.push(data);
     })
-    if(this.userInfo.user.userType === 0){
-      this.fetch();
-    }
+    this.fetch();
   },
 }
 </script>

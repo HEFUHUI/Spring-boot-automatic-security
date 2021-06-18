@@ -4,6 +4,7 @@ import com.mrhui.automatic.controller.AuthController;
 import com.mrhui.automatic.entity.vo.UserVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.session.Session;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
@@ -30,8 +31,8 @@ public class WebSocketConfig extends ServerEndpointConfig.Configurator{
     public void modifyHandshake(ServerEndpointConfig sec, HandshakeRequest request, HandshakeResponse response) {
         try {
             // 取出Session中的用户信息
-            sec.getUserProperties().put("user", SecurityUtils.getSubject().getPrincipal());
             sec.getUserProperties().put("sessionId", SecurityUtils.getSubject().getSession().getId());
+            sec.getUserProperties().put("user", SecurityUtils.getSubject().getPrincipal());
         }catch (Exception e){
             log.warn("用户未认证");
         }

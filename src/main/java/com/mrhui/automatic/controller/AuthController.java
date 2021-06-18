@@ -102,12 +102,15 @@ public class AuthController {
 
     @GetMapping("/unauth")
     @ResponseBody
+    @ResponseStatus(code = HttpStatus.UNAUTHORIZED)
     public StandardResult<String> unauth(){
         return StandardResult.failed("请登录!");
     }
-    @GetMapping("/no_permission")
+
+    @GetMapping("/{no_permission}")
     @ResponseBody
-    public StandardResult<String> no_permission(){
+    public StandardResult<String> no_permission(@PathVariable String no_permission){
+        System.out.println(no_permission);
         return StandardResult.failed("用户无权限操作!");
     }
 

@@ -144,5 +144,5 @@ create table if not exists logging
     log_create_time TIMESTAMP   default CURRENT_TIMESTAMP comment '创建时间',
     log_comment     varchar(36) default '' comment '描述',
     log_user        varchar(36) comment '触发人',
-    foreign key (log_user) references t_user (user_id)
-);
+    foreign key (log_user) references t_user (user_id) on delete set null on update set null
+    );

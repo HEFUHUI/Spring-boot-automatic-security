@@ -57,6 +57,10 @@
   - 301 发送给在线用户 com.mrhui.automatic.pojo.StandardResult
     - data[destination] 字段带目标用户ID String
 - WS_SEND_COMMEND : 发送CMD : 40x
+ - 401 : MOVE : 定向移动
+ - 402 : HANDLE : 手动移动
+ - 403 : RADIO : 发送语音
+ - 404 : CUSTOM : 自定义命令
 
 #### 返回状态码
 - WS_ERROR : 发生错误 : 400x : 所有用户

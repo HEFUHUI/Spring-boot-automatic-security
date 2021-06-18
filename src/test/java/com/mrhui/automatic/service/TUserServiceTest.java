@@ -11,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.HashMap;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class TUserServiceTest {
 
     @Autowired
@@ -62,5 +62,10 @@ class TUserServiceTest {
 
     @Test
     void update(){
+    }
+
+    @Test
+    void findById(){
+        System.out.println(userService.findById("1404344556895338496"));
     }
 }

@@ -5,10 +5,12 @@ import com.mrhui.automatic.realm.UserRealm;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
 import org.apache.shiro.mgt.SecurityManager;
 import org.apache.shiro.session.SessionListener;
+import org.apache.shiro.session.mgt.SessionKey;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
+import org.apache.shiro.web.session.mgt.WebSessionKey;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +42,8 @@ public class ShiroConfig {
         filterMap.put("/css/**", "anon");
         filterMap.put("/images/**", "anon");
         filterMap.put("/user/logout", "anon");
-//        filterMap.put("/user","perms[user:get]");
+
+        filterMap.put("/user/*","perms[user:*]");
         //拦截所有请求 需要验证
         filterMap.put("/**", "authc");
 
@@ -108,11 +111,12 @@ public class ShiroConfig {
 
     @Bean
     public DefaultWebSessionManager sessionManager(@Qualifier("sessionListen") ShiroSessionListen sessionListen){
-        Collection<SessionListener> listeners = new ArrayList<SessionListener>();
+        Collection<SessionListener> listeners = new ArrayList<>();
         listeners.add(sessionListen);
         MyWebSessionManager myWebSessionManager = new MyWebSessionManager();
         myWebSessionManager.setSessionListeners(listeners);
         myWebSessionManager.setSessionIdUrlRewritingEnabled(false);
+        myWebSessionManager.setSessionIdCookieEnabled(true);
         return myWebSessionManager;
     }
 }

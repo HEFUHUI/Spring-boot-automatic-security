@@ -3,10 +3,7 @@ package com.mrhui.automatic.service.impl;
 import com.google.gson.Gson;
 import com.mrhui.automatic.entity.TUser;
 import com.mrhui.automatic.entity.vo.UserVO;
-import com.mrhui.automatic.pojo.ProjectConfig;
-import com.mrhui.automatic.pojo.StandardResult;
-import com.mrhui.automatic.pojo.WebsocketClient;
-import com.mrhui.automatic.pojo.WebsocketReceive;
+import com.mrhui.automatic.pojo.*;
 import com.mrhui.automatic.service.LoggingService;
 import com.mrhui.automatic.service.TUserService;
 import com.mrhui.automatic.service.WebSocketService;
@@ -22,6 +19,8 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.mrhui.automatic.pojo.Common.*;
 
@@ -52,7 +51,7 @@ public class WebSocketServiceImpl implements WebSocketService {
             onlineUsers.add(userVO.getUser());
             broadWithUserType(gson.toJson(StandardResult.success("新用户登录",WS_UPDATE_INFO,userVO.getUser())),TYPE_ADMIN);
         }else{
-            notCertifiedHashTable.put(sessionId,new WebsocketClient(session,null));
+            notCertifiedHashTable.put(session.getId(),new WebsocketClient(session,null));
             sendWithSession(StandardResult.failed("请提供身份信息！",WS_ERROR_USER_UNAUTHORIZED),session);
         }
     }
@@ -77,6 +76,7 @@ public class WebSocketServiceImpl implements WebSocketService {
     /**
      * 接收信息
      * 大致流程：
+     * 如果用户信息为空的向管理员广播该匿名消息后直接返回
      *  @param session 会话信息
      * @param message 消息体
      * @param userVO 发送者用户信息
@@ -92,9 +92,8 @@ public class WebSocketServiceImpl implements WebSocketService {
         try {
             //解析JSON数据
             WebsocketReceive websocketReceive = gson.fromJson(message, WebsocketReceive.class);
-            log.info("websocketReceive={}",websocketReceive);
             int code = websocketReceive.getCode();
-            if (code >= WS_BROADCAST && code <= WS_GET_INFO) {
+           if (code >= WS_BROADCAST && code <= WS_GET_INFO) {
                 if(user.getUserType()==0||user.getUserType()==2){
                     broadcast(websocketReceive,user);
                 }else{
@@ -119,22 +118,23 @@ public class WebSocketServiceImpl implements WebSocketService {
             }
         }catch (Exception e){
             log.error("用户{}发送的数据解析发生错误！",user.getUserId());
-            broadWithUserType(message,TYPE_ADMIN);
+//            broadWithUserType(message,TYPE_ADMIN);
         }
-
+        //Debug
+        broadWithUserType(message,TYPE_ADMIN);
     }
 
     private void sendMessage(WebsocketReceive receive, TUser user) {
         int code = receive.getCode();
         if(code == WS_SEND_MESSAGE+1){
+            log.info("receive.getData()={}",receive.getData());
            sendWithHttpSessionId(receive.getDestination(),StandardResult.success("有消息",WS_SEND_MESSAGE+11,receive.getData(),user));
         }
     }
 
     private void sendCommend(WebsocketReceive receive, TUser user) {
-        if (receive.getCode() == WS_SEND_COMMEND+1) {
-            // TODO: 2021/6/13 发送命令到设备
-        }
+        val code = receive.getCode();
+        sendWithHttpSessionId(receive.getDestination(), StandardResult.success("有命令",code,receive.getData()));
     }
 
     /**
@@ -146,16 +146,20 @@ public class WebSocketServiceImpl implements WebSocketService {
         val code = receive.getCode();
         try {
             if (code == WS_BROADCAST+1) {
+                // 广播到所有管理员
                 send_broadcast(receive, user,TYPE_ADMIN);
             }else if(code == WS_BROADCAST+2){
+                // 广播到全部学生
                 send_broadcast(receive, user, TYPE_STUDENT);
             }else if(code==WS_BROADCAST+3){
+                // 广播到所有设备
                 send_broadcast(receive, user, TYPE_HARDWARE);
             }else if(code==WS_BROADCAST+4){
+                //广播到所有在线设备
                 broadcast(StandardResult.success("收到消息",WS_BROADCAST,receive.getData(),user));
             }
         }catch (Exception e){
-            sendWithUserId(user.getUserId(),StandardResult.failed("服务器错误",WS_SERVER_ERROR));
+            sendWithHttpSessionId(user.getSessionId(),StandardResult.failed("服务器错误",WS_SERVER_ERROR));
         }
     }
 
@@ -167,15 +171,23 @@ public class WebSocketServiceImpl implements WebSocketService {
         val code = receive.getCode();
         try {
             if(code == WS_GET_INFO+1){
+                //获取所有在线的管理员
                 sendUserInfo(session,WS_GET_INFO + 11,TYPE_ADMIN);
             }else if(code == WS_GET_INFO+2){
+                // 获取所有在线的学生
                 sendUserInfo(session, WS_GET_INFO+12,TYPE_STUDENT);
             }else if(code == WS_GET_INFO+3){
+                // 获取所有在线的设备
                 sendUserInfo(session,  WS_GET_INFO+13,+TYPE_HARDWARE);
             }else if(code == WS_GET_INFO+4){
+                // 获取所有在线的用户
                 sendWithSession(StandardResult.success("获取成功",WS_GET_INFO+14,onlineUsers),session);
             }else if(code == WS_GET_INFO+5){
-                sendWithSession(StandardResult.success("获取成功",WS_GET_INFO+15,isOnline(receive.getData().toString())),session);
+                //获取单个用户信息
+                sendWithSession(StandardResult.success("获取成功",WS_GET_INFO+15,userService.findById(receive.getData().toString())),session);
+            }else if(code == WS_GET_INFO+6){
+                // 判断该用户是否在线
+                isOnline(receive.getData().toString(),session);
             }
         }catch (Exception e){
             sendWithSession(StandardResult.failed("获取失败",WS_ERROR_GET_INFO_FAIL),session);
@@ -185,8 +197,21 @@ public class WebSocketServiceImpl implements WebSocketService {
     private void sendUserInfo(Session session, int returnCode, int userType) {
         sendWithSession(StandardResult.success("获取信息", returnCode,getAllOnlineWithType(userType)), session);
     }
-    private boolean isOnline(String userId){
-        return certifiedHashTable.get(userId) != null;
+    private void isOnline(String userId, Session session){
+        AtomicBoolean result = new AtomicBoolean(false);
+        AtomicReference<TUser> tUser = new AtomicReference<>();
+        onlineUsers.forEach(user -> {
+            if(user.getUserId().equals(userId)){
+                result.set(true);
+                tUser.set(user);
+            }
+        });
+        if(result.get()){
+            sendWithSession(StandardResult.success("用户在线",WS_GET_INFO+16,tUser.get()),session);
+        }else{
+            sendWithSession(StandardResult.failed("用户离线",WS_GET_INFO+26),session);
+        }
+
     }
 
     private List<TUser> getAllOnlineWithType(int userType){
@@ -202,12 +227,13 @@ public class WebSocketServiceImpl implements WebSocketService {
     @Override
     public void broadWithUserType(String message, int userType) {
         certifiedHashTable.forEach((key,websocketClient)->{
-            if(websocketClient.getUser().getUserType() == userType){
-                try {
-                    websocketClient.getSession().getAsyncRemote().sendText(message);
-                }catch(Exception e){
-                    log.error("发送消息到用户 {} 失败：{}",websocketClient.getUser().getUserId(),e.getMessage());
-                }
+            if (websocketClient.getUser().getUserType() != userType) {
+                return;
+            }
+            try {
+                websocketClient.getSession().getAsyncRemote().sendText(message);
+            }catch(Exception e){
+                log.error("发送消息到用户 {} 失败：{}",websocketClient.getUser().getUserId(),e.getMessage());
             }
         });
     }
@@ -233,9 +259,11 @@ public class WebSocketServiceImpl implements WebSocketService {
 
     @Override
     public void sendWithHttpSessionId(String sessionId, Object message) {
-        val session = certifiedHashTable.get(sessionId).getSession();
-        if(session.isOpen()){
-            session.getAsyncRemote().sendText(gson.toJson(message));
+        final WebsocketClient websocketClient = certifiedHashTable.get(sessionId);
+        if(websocketClient!=null){
+            if(websocketClient.getSession().isOpen()){
+                websocketClient.getSession().getAsyncRemote().sendText(gson.toJson(message));
+            }
         }
     }
 

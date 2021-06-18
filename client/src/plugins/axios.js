@@ -26,7 +26,9 @@ function stopLoading(){
 _axios.interceptors.request.use(
   function(config) {
     startLoading();
-    config.headers.common['Authorization'] = sessionStorage.getItem("sessionsID")
+    if(sessionStorage.getItem("sessionsID")){
+      config.headers.common['authorization'] = sessionStorage.getItem("sessionsID")
+    }
     return config;
   },
   function(error) {
@@ -48,7 +50,7 @@ _axios.interceptors.response.use(
     return response;
   },
   function(error) {
-    if(error.response.data.status === 400){
+    if(error.response.data.status === 401){
       sessionStorage.removeItem("sessionsID")
       Message({
         type:"error",

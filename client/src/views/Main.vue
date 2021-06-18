@@ -80,7 +80,8 @@
       <h-char :msgs="msgs"></h-char>
     </el-dialog>
     <div class="fixed-box">
-      <div><el-button type="info" icon="el-icon-user-solid" @click="showDrawer = true" circle></el-button></div>
+      <div><el-button type="info" icon="el-icon-tickets" @click="fetch" circle></el-button></div>
+      <div><el-button type="success" icon="el-icon-user-solid" @click="showDrawer = true" circle></el-button></div>
       <div>
         <el-badge :value="unread" :hidden="unread < 1">
           <el-button type="primary" icon="el-icon-message" @click="messageDialog = true;unread = 0" circle></el-button>

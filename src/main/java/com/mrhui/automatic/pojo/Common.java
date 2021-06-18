@@ -13,6 +13,9 @@ public interface Common {
     public static int WS_GET_INFO = 200;//管理员获取信息
     public static int WS_SEND_MESSAGE = 300;//发送消息
     public static int WS_SEND_COMMEND = 400; //发送CMD
+    public static int WS_COMMEND_MOVE = 401; //发送CMD
+    public static int WS_COMMEND_HANDLE = 402; //发送CMD
+    public static int WS_COMMEND_RADIO = 403; //发送CMD
 
     //websocket 服务器主动广播回复命令 接收者为管理员
     public static int WS_LOGOUT = 2; //有用户登出

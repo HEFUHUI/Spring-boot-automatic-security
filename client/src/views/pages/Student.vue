@@ -51,7 +51,7 @@
           </el-table-column>
           <el-table-column label="班级">
             <template slot-scope="{ row }">
-              <el-tag type="success">{{ row.tclass.name  ? row.tclass.name : "无班级" }}</el-tag>
+              <el-tag type="success">{{ row.classes.name  ? row.classes.name : "无班级" }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column fixed="right" width="300" label="操作" align="center">

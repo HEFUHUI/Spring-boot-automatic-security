@@ -17,7 +17,7 @@
         <el-card class="box-card" style="text-align: center">
           <div slot="header" class="clearfix">
             <span>手动控制</span>
-            <el-button style="float: right; padding: 3px 0" type="text" @click="move">复位</el-button>
+            <el-button style="float: right; padding: 3px 0" type="text" @click="restore">复位</el-button>
           </div>
           <el-form label-width="70px">
             <el-form-item label="速度">
@@ -36,6 +36,25 @@
           <el-button @click="moveDown" type="primary" size="large">后退</el-button>
         </el-card>
       </el-col>
+      <el-col :span=8>
+        <el-card>
+          <div slot="header" class="clearfix">
+            <span>自定义消息</span>
+            <el-button style="float: right; padding: 3px 0" type="text" @click="code=400;cmd=''">复位</el-button>
+          </div>
+          <el-form>
+            <el-form-item label="Code" size="normal">
+              <el-input v-model="code" max=499 min=400 type=number placeholder="输入码" size="normal" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="命令" size="normal">
+              <el-input v-model="cmd" placeholder="输入命令" size="normal" clearable></el-input>
+            </el-form-item>
+            <el-form-item size="normal">
+              <el-button @click="command()" type="primary">发送消息</el-button>
+            </el-form-item>
+          </el-form>
+        </el-card>
+      </el-col>
     </el-row>
   </div>
 </template>
@@ -51,7 +70,9 @@ export default {
       speed: 0,
       data_data: {
         x: 0, y: 0, z: 0
-      }
+      },
+      code:'',
+      cmd:""
     }
   },
   created() {
@@ -81,7 +102,7 @@ export default {
           this.$message({type:"error",message:data.msg})
         }
       }catch (e) {
-        console.log(e)
+        console.log(e);
       }
     }
   },
@@ -111,15 +132,21 @@ export default {
     },
     async move() {
       this.$ws.send(JSON.stringify({
-        code: 120,
-        data: {
-          data: {
-            data: this.data_data,
-            action: "move"
-          },
-          destination: this.equ.data.userId
-        },
+        code: 401,
+        destination: this.sessionId,
+        data: this.data_data,
       }))
+    },
+    async command() {
+      if(this.code >= 400 && this.code < 500){
+        this.$ws.send(JSON.stringify({
+          code: this.code,
+          destination: this.sessionId,
+          data:this.cmd
+        }))
+      }else{
+        this.$message("Code必须是>400并且<500")
+      }
     },
     async restore() {
       this.data_data = {x: 0, y: 0, z: 0}
@@ -127,14 +154,9 @@ export default {
     },
     async handleMove() {
       this.$ws.send(JSON.stringify({
-        code: 120,
-        data: {
-          data: {
-            data: this.data_data,
-            action: "handle"
-          },
-          destination: this.equ.data.userId
-        },
+        code: 402,
+        destination: this.sessionId,
+        data:this.data_data,
       }))
     },
     drawLine() {
@@ -158,6 +180,11 @@ export default {
       });
     }
   },
+  computed:{
+    sessionId(){
+      return this.$route.params.id
+    }
+  }
 }
 </script>
 

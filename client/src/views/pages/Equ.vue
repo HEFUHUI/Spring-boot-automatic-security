@@ -25,7 +25,6 @@
           </el-form-item>
         </el-form>
           <el-button type="primary" size="mini" @click="showDialog = true">添加</el-button>
-          <el-button type="danger" size="mini">删除</el-button>
       </el-card>
     </el-row>
     <el-row>
@@ -33,23 +32,7 @@
         <el-card class="box-card">
           <el-row>
             <el-col :span="4" v-for="equ in data.items" :key="equ.userId">
-              <el-card :body-style="{ padding: '0px' }">
-                <el-image
-                    :preview-src-list="[$axios.defaults.baseURL+'/image/get/'+equ.avatar.imageId]"
-                    fit="cover"
-                    :src="$axios.defaults.baseURL+'/image/get/'+equ.avatar.imageId" style="width: 100%;height: 200px" class="image">
-                </el-image>
-                <div style="padding: 14px;">
-                  <span style="font-weight: bold;font-size: 20px">{{ equ.nickName }}</span>
-                  <p><time class="time">添加时间：{{ new Date(equ.createTime).format("yyyy-MM-dd") }}</time></p>
-                  <el-button type="success" size="mini" v-if="equ.online">在线</el-button>
-                  <el-button type="warning" size="mini" :disabled="true" v-else>离线</el-button>
-                </div>
-               <div style="padding: 10px">
-                 <el-button size="mini" type="info" @click="$router.push(`/monitor/${equ.userId}`)">监控页面</el-button>
-                 <el-button type="danger" size="mini" class="button">下线设备</el-button>
-               </div>
-              </el-card>
+                <h-equ :equ="equ"></h-equ>
             </el-col>
           </el-row>
         </el-card>
@@ -68,12 +51,10 @@
         </el-card>
       </el-col>
 
-
       <!-- 更改头像 -->
       <h-selector action="image" no_result @enter="changeAvatarHandle" :visible.sync="changeAvatar">
         <div slot-scope="item" >
-            <el-image :src="$axios.defaults.baseURL+'/image/get/'+(item.data && item.data.imageId)" fit="cover" style="width:100px;height:50px">
-            </el-image>
+            <el-image :src="$axios.defaults.baseURL+'/image/get/'+(item.data && item.data.imageId)" fit="cover" style="width:100px;height:50px"></el-image>
         </div>
       </h-selector>
       <!-- 更改头像====end -->
@@ -134,6 +115,7 @@
 </template>
 <script>
 import hSelector from "../../components/Selecter"
+import hEqu from "../../components/EquItem.vue"
 export default {
   data() {
     return {
@@ -154,7 +136,8 @@ export default {
     };
   },
   components:{
-    hSelector
+    hSelector,
+    hEqu
   },
   methods: {
     async fetch(page = 1,limit=10) {

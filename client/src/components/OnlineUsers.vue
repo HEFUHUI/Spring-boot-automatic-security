@@ -29,7 +29,6 @@
           <template slot-scope="{row}">
               <template v-if="row.sessionId !== sessionId">
                 <el-button type="primary" size="mini" icon="el-icon-s-promotion" @click="current_user = row;dialogVisible = true"></el-button>
-                <el-button type="warning" size="mini" icon="el-icon-delete" @click="current_user = row;dialogVisible = true"></el-button>
             </template>
             <template v-else>
               <el-button type="primary" disabled size="mini">自己</el-button>
@@ -55,12 +54,12 @@
 <script>
 export default {
   name: "OnlineUsers",
-  props: ["users"],
   data() {
     return {
       input:"",
       dialogVisible:false,
       current_user:{},
+      users:[]
     }
   },
   destroyed() {
@@ -70,11 +69,10 @@ export default {
     send(){
       this.$ws.send(JSON.stringify({
         code:301,
-        destination:this.current_user.userId,
-        data:{
-          data:this.input
-        }
+        destination:this.current_user.sessionId,
+        data:this.input
       }))
+      this.dialogVisible = false;
     },
     async fetch() {
       this.$ws.send(JSON.stringify({
@@ -90,7 +88,30 @@ export default {
       return this.$store.getters.userInfo;
     }
   },
-  created() {
+  mounted() {
+    this.$eventBus.$on("ws-message",msg=>{
+      try {
+        let data = JSON.parse(msg.data);
+        switch (data.code) {
+          case 214:
+            this.users = [];
+            for (let key in data.data) {
+              this.users.push(data.data[key])
+            }
+            this.refresh();
+            break;
+          case 1:
+            this.users.push(data.data)
+                break;
+          case 2:
+            this.users = this.users.filter(item=>item.sessionId!==data.data.sessionId);
+            break;
+          }
+      } catch (e) {
+        console.log(e);
+      }
+    })
+    this.fetch();
   }
 }
 </script>

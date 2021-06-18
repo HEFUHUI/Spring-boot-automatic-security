@@ -13,6 +13,7 @@ import com.mrhui.automatic.service.TUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authz.annotation.RequiresAuthentication;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.apache.shiro.subject.Subject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -67,6 +68,7 @@ public class UserController extends CrudControllerA<TUser> {
      */
     @GetMapping("me")
     @ResponseBody
+    @RequiresPermissions("user:me")
     public StandardResult<UserVO> me(){
         UserVO userVO = (UserVO) SecurityUtils.getSubject().getPrincipal();
         return StandardResult.success(userVO);
