@@ -42,11 +42,6 @@
             label="账户名称"
             show-overflow-tooltip
           ></el-table-column>
-          <el-table-column label="状态">
-            <template slot-scope="{ row }">
-              {{ row.online ? '在线' : '离线' }}
-            </template>
-          </el-table-column>
           <el-table-column label="添加日期">
             <template slot-scope="{ row }">{{ new Date(row.createTime).format("yyyy-MM-dd") }}</template>
           </el-table-column>

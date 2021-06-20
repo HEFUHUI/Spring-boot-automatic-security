@@ -18,19 +18,18 @@ import java.util.Collections;
 @SpringBootApplication
 @EnableScheduling
 @Slf4j
-@ServletComponentScan(basePackages = "com.fuhui.automatic")
 public class AutomaticApplication extends SpringBootServletInitializer {
     public static void main(String[] args) {
         SpringApplication.run(AutomaticApplication.class, args);
     }
 
-    @Override
-    public void onStartup(ServletContext servletContext) throws ServletException {
-        super.onStartup(servletContext);
-        servletContext.setSessionTrackingModes(
-                Collections.singleton(SessionTrackingMode.COOKIE)
-        );
-        SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
-        sessionCookieConfig.setHttpOnly(true);
-    }
+//    @Override
+//    public void onStartup(ServletContext servletContext) throws ServletException {
+//        super.onStartup(servletContext);
+//        servletContext.setSessionTrackingModes(
+//                Collections.singleton(SessionTrackingMode.COOKIE)
+//        );
+//        SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
+//        sessionCookieConfig.setHttpOnly(false);
+//    }
 }

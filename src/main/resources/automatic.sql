@@ -9,6 +9,7 @@ create table if not exists t_class
     create_time datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     update_at   datetime                               not null on update CURRENT_TIMESTAMP default CURRENT_TIMESTAMP comment '最后更新',
     comment     varchar(100) default ''                not null comment '描述',
+    is_working  bit          default 0 comment '是否在上课',
     is_delete   bit          default 0 comment '是否已被删除'
 ) comment '班级表';
 
@@ -19,9 +20,7 @@ create table if not exists t_image
     alias       varchar(300)  null                                 default '' comment '别名',
     create_time datetime                                           default CURRENT_TIMESTAMP not null comment '创建时间',
     update_at   datetime      not null on update CURRENT_TIMESTAMP default CURRENT_TIMESTAMP comment '最后更新',
-    comment     varchar(100)                                       default '' not null comment '描述',
     is_delete   bit                                                default 0 comment '是否已被删除',
-    full        bit                                                default 0 comment '是否完全URL'
 ) comment '图片表';
 
 create table if not exists t_course
@@ -53,8 +52,8 @@ create table if not exists t_user
     update_at   datetime                               not null on update CURRENT_TIMESTAMP default CURRENT_TIMESTAMP comment '最后更新',
     comment     varchar(100) default ''                not null comment '描述',
     is_delete   bit          default 0 comment '是否已被删除',
-    foreign key (avatar) references t_image (image_id) on delete set null on update set null,
-    foreign key (class_id) references t_class (class_id) on delete set null on update set null
+    foreign key (avatar) references t_image (image_id) on delete set null on update CASCADE ,
+    foreign key (class_id) references t_class (class_id) on delete set null on update CASCADE
 ) comment '用户表';
 
 
@@ -75,8 +74,8 @@ create table if not exists t_user_role
     create_time datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
     update_at   datetime                               not null on update CURRENT_TIMESTAMP default CURRENT_TIMESTAMP comment '最后更新',
     primary key (user_id, role_id),
-    foreign key (user_id) references t_user (user_id) on DELETE CASCADE,
-    foreign key (role_id) references t_role (role_id) on DELETE CASCADE
+    foreign key (user_id) references t_user (user_id) on DELETE set null on update CASCADE ,
+    foreign key (role_id) references t_role (role_id) on DELETE set null on update CASCADE
 ) comment '用户所属角色';
 
 create table if not exists t_permissions
@@ -97,8 +96,8 @@ create table if not exists t_role_permissions
     update_at      datetime                               not null on update CURRENT_TIMESTAMP default CURRENT_TIMESTAMP comment '最后更新',
     comment        varchar(100) default ''                not null comment '描述',
     primary key (permissions_id, role_id),
-    foreign key (permissions_id) references t_permissions (permissions_id) on DELETE CASCADE,
-    foreign key (role_id) references t_role (role_id) on DELETE CASCADE
+    foreign key (permissions_id) references t_permissions (permissions_id) on DELETE set null on update CASCADE ,
+    foreign key (role_id) references t_role (role_id) on DELETE set NULL on update CASCADE
 ) comment '角色拥有权限';
 
 
@@ -130,7 +129,7 @@ create table if not exists t_notification
     update_at   datetime                           not null on update CURRENT_TIMESTAMP default CURRENT_TIMESTAMP comment '最后更新',
     comment     varchar(100)                       null comment '描述',
     is_delete   bit      default 0 comment '是否已被删除',
-    foreign key (preview) references t_image (image_id)
+    foreign key (preview) references t_image (image_id) on delete set null on update CASCADE
 )
     comment '消息表';
 
@@ -145,4 +144,4 @@ create table if not exists logging
     log_comment     varchar(36) default '' comment '描述',
     log_user        varchar(36) comment '触发人',
     foreign key (log_user) references t_user (user_id) on delete set null on update set null
-    );
+);

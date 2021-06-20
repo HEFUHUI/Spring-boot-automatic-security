@@ -26,12 +26,10 @@ public class MyWebSessionManager extends DefaultWebSessionManager {
     @Override
     protected Serializable getSessionId(ServletRequest request, ServletResponse response) {
         String id = WebUtils.toHttp(request).getHeader(HttpHeaders.AUTHORIZATION);
-        String reg = "token=";
         String queryString = WebUtils.toHttp(request).getQueryString();
         String tokenId = "";
-        log.debug("QUERY_STRING={}",queryString);
         if(queryString!=null){
-            String[] split = queryString.split(reg);
+            String[] split = queryString.split("token=");
             if (split.length  > 1) {
                 tokenId = split[1];
             }

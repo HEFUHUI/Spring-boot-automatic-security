@@ -10,8 +10,9 @@ export let config = {
 };
 const _axios = axios.create({
   baseURL: 'http://'+config.host,
-  timeout: config.timeout
+  timeout: config.timeout,
 });
+_axios.options.withCredentials = true;
 let loading;
 function startLoading(){
   loading = Loading.service({
@@ -27,7 +28,7 @@ _axios.interceptors.request.use(
   function(config) {
     startLoading();
     if(sessionStorage.getItem("sessionsID")){
-      config.headers.common['authorization'] = sessionStorage.getItem("sessionsID")
+      config.headers.common['Authorization'] = sessionStorage.getItem("sessionsID")
     }
     return config;
   },
@@ -123,7 +124,7 @@ ws.onclose = ()=>{
 ws.onerror = (err)=>{
   app.$emit("ws-error",err)
 }
-ws.onopen = function (){
-  Message({type:"success",message:"连接成功!",showClose:true})
-}
+// ws.onopen = function (){
+//   Message({type:"success",message:"连接成功!",showClose:true})
+// }
 export default Plugin;
