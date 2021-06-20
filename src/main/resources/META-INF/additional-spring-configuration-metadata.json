@@ -9,5 +9,10 @@
       "name": "upload.location",
       "type": "java.lang.String",
       "description": "Description for upload.location."
+    },
+    {
+      "name": "cors.allowedOrigins",
+      "type": "java.lang.String",
+      "description": "Description for cors.allowedOrigins."
     }
   ] }

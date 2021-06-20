@@ -27,3 +27,6 @@ upload:
 
 opencv:
   dll_path: D:\code\automatic (V2)\src\main\resources\lib\opencv_java452.dll
+
+cors:
+  allowedOrigins: http://localhost:8080
