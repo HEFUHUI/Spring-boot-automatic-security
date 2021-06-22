@@ -10,6 +10,7 @@ import com.mrhui.automatic.pojo.ProjectConfig;
 import com.mrhui.automatic.service.TImageService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -29,7 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Controller
+@RestController
 @RequestMapping("/image")
 @Slf4j
 public class ImageController extends CrudControllerA<TImage> {
@@ -39,6 +40,7 @@ public class ImageController extends CrudControllerA<TImage> {
 
     @Autowired
     ProjectConfig projectConfig;
+
     @Override
     public StandardResult<Page<TImage>> get(
             @RequestParam(required = false,value = "q") List<String> query,
@@ -78,7 +80,7 @@ public class ImageController extends CrudControllerA<TImage> {
     }
 
     @PostMapping("upload")
-    @ResponseBody
+    @RequiresPermissions("image:upload")
     public StandardResult<TImage> upload(@RequestParam("file") MultipartFile image) {
         Map<String,Object> map = new HashMap<>();
         map.put("alias",image.getOriginalFilename());
@@ -144,21 +146,5 @@ public class ImageController extends CrudControllerA<TImage> {
             log.error("读取文件{}失败了!",tImage.getAlias());
             e.printStackTrace();
         }
-    }
-
-    @GetMapping("index")
-    public String index(Model model,
-                        @RequestParam(value = "search",defaultValue = "%",required = false) String search,
-                        @RequestParam(value = "page",defaultValue = "1",required = false) int page,
-                        @RequestParam(value = "limit",defaultValue = "10",required = false) int limit){
-        System.out.println(projectConfig.getLocation());
-        UserVO tUser = (UserVO) SecurityUtils.getSubject().getPrincipal();
-        model.addAttribute("user",tUser);
-        model.addAttribute("title","图片");
-        Map<String,Object> map = new HashMap<>();
-        //输入别名为搜索条件
-        map.put("alias",search);
-        model.addAttribute("pages",imageService.findByQuery(map,new Page<>(limit,page)));
-        return "pages/image";
     }
 }

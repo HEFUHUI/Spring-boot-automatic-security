@@ -15,26 +15,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 
-@Controller
+@RestController
 @RequestMapping("equ")
 public class EquipmentController extends CrudControllerA<TUser> {
     @Autowired
     TUserService userService;
-
-
-    @GetMapping("index")
-    public String index(Model model,
-                        @RequestParam(value = "page",defaultValue = "1",required = false) int page,
-                        @RequestParam(value = "limit",defaultValue = "10",required = false) int limit){
-        UserVO tUser = (UserVO) SecurityUtils.getSubject().getPrincipal();
-        model.addAttribute("user",tUser);
-        model.addAttribute("title","设备");
-        // 查询user_type为设备的类型
-        HashMap<String,Object> map = new HashMap<>();
-        map.put("user_type", Common.TYPE_HARDWARE);
-        model.addAttribute("pages",userService.findByQuery(map,new Page<>(limit,page)));
-        return "pages/equipment";
-    }
 
     @Override
     public StandardResult<TUser> getWithId(String id) {

@@ -36,18 +36,14 @@ public class ShiroConfig {
         filterMap.put("/auth/**", "anon");
         filterMap.put("/send", "anon");
         filterMap.put("/ws", "anon");
-        filterMap.put("/index/**", "anon");
-        filterMap.put("/js/**", "anon");
-        filterMap.put("/image/get/*", "anon");
-        filterMap.put("/css/**", "anon");
-        filterMap.put("/images/**", "anon");
         filterMap.put("/user/logout", "anon");
+        filterMap.put("/image/get/*", "anon");
 
-        filterMap.put("/user/*","perms[user:*]");
-        //拦截所有请求 需要验证
-        filterMap.put("/**", "authc");
+//        filterMap.put("/user/*","perms[user:*]");
+//        拦截所有请求 需要验证
 
-        //设置登录页面
+//        filterMap.put("/**", "authc");
+//        设置登录页面
         filterFactoryBean.setLoginUrl("/auth/unauth");
         filterFactoryBean.setUnauthorizedUrl("/auth/no_permission");
         filterFactoryBean.setFilterChainDefinitionMap(filterMap);
@@ -116,7 +112,6 @@ public class ShiroConfig {
         MyWebSessionManager myWebSessionManager = new MyWebSessionManager();
         myWebSessionManager.setSessionListeners(listeners);
         myWebSessionManager.setSessionIdUrlRewritingEnabled(false);
-        myWebSessionManager.setSessionIdCookieEnabled(true);
         return myWebSessionManager;
     }
 }

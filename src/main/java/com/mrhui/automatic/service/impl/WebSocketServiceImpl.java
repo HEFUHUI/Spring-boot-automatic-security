@@ -127,7 +127,6 @@ public class WebSocketServiceImpl implements WebSocketService {
     private void sendMessage(WebsocketReceive receive, TUser user) {
         int code = receive.getCode();
         if(code == WS_SEND_MESSAGE+1){
-            log.info("receive.getData()={}",receive.getData());
            sendWithHttpSessionId(receive.getDestination(),StandardResult.success("有消息",WS_SEND_MESSAGE+11,receive.getData(),user));
         }
     }

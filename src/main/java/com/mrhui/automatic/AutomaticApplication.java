@@ -23,13 +23,13 @@ public class AutomaticApplication extends SpringBootServletInitializer {
         SpringApplication.run(AutomaticApplication.class, args);
     }
 
-//    @Override
-//    public void onStartup(ServletContext servletContext) throws ServletException {
-//        super.onStartup(servletContext);
-//        servletContext.setSessionTrackingModes(
-//                Collections.singleton(SessionTrackingMode.COOKIE)
-//        );
-//        SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
-//        sessionCookieConfig.setHttpOnly(false);
-//    }
+    @Override
+    public void onStartup(ServletContext servletContext) throws ServletException {
+        super.onStartup(servletContext);
+        servletContext.setSessionTrackingModes(
+                Collections.singleton(SessionTrackingMode.COOKIE)
+        );
+        SessionCookieConfig sessionCookieConfig = servletContext.getSessionCookieConfig();
+        sessionCookieConfig.setHttpOnly(false);
+    }
 }

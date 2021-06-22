@@ -31,11 +31,4 @@ public class HomeController {
 
     @Autowired
     private Gson gson;
-
-    @GetMapping({"/index","/"})
-    public String index(Model model){
-        UserVO tUser = (UserVO) SecurityUtils.getSubject().getPrincipal();
-        model.addAttribute("user",tUser);
-        return "index";
-    }
 }

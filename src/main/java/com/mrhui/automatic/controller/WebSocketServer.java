@@ -22,7 +22,6 @@ public class WebSocketServer {
      * 连接 用户登录
      *
      * @param session  Session
-     * @param sessionId String
      * @throws IOException e
      */
     @OnOpen

@@ -12,10 +12,11 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.HashMap;
 
-@Controller
+@RestController
 @RequestMapping("/edu")
 public class EduController {
 
@@ -24,28 +25,4 @@ public class EduController {
 
     @Autowired
     TClassService classService;
-
-    @GetMapping("/student")
-    public String student(Model model,
-                          @RequestParam(value = "page",defaultValue = "1",required = false) int page,
-                          @RequestParam(value = "limit",defaultValue = "10",required = false) int limit){
-        UserVO tUser = (UserVO) SecurityUtils.getSubject().getPrincipal();
-        model.addAttribute("user",tUser);
-        model.addAttribute("title","学生");
-        // 查询user_type为学生的类型
-        HashMap<String,Object> map = new HashMap<>();
-        map.put("user_type", Common.TYPE_STUDENT);
-        model.addAttribute("pages",userService.findByQuery(map,new Page<>(limit,page)));
-        model.addAttribute("classes",classService.findAll(new Page<>()));
-        return "pages/student";
-    }
-
-    @GetMapping("/student/add")
-    public String student(Model model){
-        UserVO tUser = (UserVO) SecurityUtils.getSubject().getPrincipal();
-        model.addAttribute("user",tUser);
-        model.addAttribute("title","学生");
-        model.addAttribute("pages",userService.findAll(new Page<>()));
-        return "pages/student_add";
-    }
 }

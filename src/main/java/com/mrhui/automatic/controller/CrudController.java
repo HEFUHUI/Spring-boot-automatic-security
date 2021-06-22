@@ -4,6 +4,7 @@ import com.mrhui.automatic.entity.TUser;
 import com.mrhui.automatic.exception.ParamsException;
 import com.mrhui.automatic.pojo.Page;
 import com.mrhui.automatic.pojo.StandardResult;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,7 +14,7 @@ import java.util.Map;
 
 public interface CrudController<T> {
     @GetMapping
-    @ResponseBody
+//    @RequiresPermissions("*:get")
     public StandardResult<Page<T>> get(
             @RequestParam(required = false,value = "q") List<String> query,
             @RequestParam(value = "page",defaultValue = "1",required = false) int page,
@@ -21,19 +22,19 @@ public interface CrudController<T> {
     );
 
     @PostMapping
-    @ResponseBody
+//    @RequiresPermissions("*:add")
     public StandardResult<T> add(@RequestBody  T data);
 
     @PutMapping("/{id}")
-    @ResponseBody
+//    @RequiresPermissions("*:update")
     public StandardResult<T> update(@RequestBody T data,@PathVariable("id") String id);
 
     @DeleteMapping("/{id}")
-    @ResponseBody
+//    @RequiresPermissions("*:delete")
     public StandardResult<T> delete(@PathVariable("id") String id);
 
 
     @GetMapping("/find/{id}")
-    @ResponseBody
+//    @RequiresPermissions("*:getWithId")
     public StandardResult<T> getWithId(@PathVariable("id") String id);
 }

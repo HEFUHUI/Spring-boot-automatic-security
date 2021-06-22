@@ -3,7 +3,9 @@
     <el-row>
       <el-card class="box-card" style="margin-bottom: 10px">
         <div slot="header">
-          <el-button icon="el-icon-back" size="mini"  @click="$router.go(-1)">返回</el-button>
+          <el-button icon="el-icon-back" size="mini" @click="$router.go(-1)"
+            >返回</el-button
+          >
           <h1>所有角色</h1>
         </div>
         <el-form
@@ -28,12 +30,20 @@
         <el-button type="primary" size="mini" @click="showDialog = true"
           >添加</el-button
         >
-        <el-button type="danger" size="mini" @click="delMultiple">删除</el-button>
+        <el-button type="danger" size="mini" @click="delMultiple"
+          >删除</el-button
+        >
       </el-card>
     </el-row>
     <el-row>
       <el-col>
-        <el-table ref="multipleTable" border :data="data.items" stripe @selection-change="tableSelector = $event">
+        <el-table
+          ref="multipleTable"
+          border
+          :data="data.items"
+          stripe
+          @selection-change="tableSelector = $event"
+        >
           <el-table-column type="selection" width="55"></el-table-column>
           <el-table-column prop="roleId" label="ID"> </el-table-column>
           <el-table-column prop="name" label="名称" width="120">
@@ -52,8 +62,14 @@
                 :key="per.permissionsId"
                 trigger="click"
               >
-              {{per.comment}}
-              <el-button  type="text" style="margin-right:10px" size="mini"  slot="reference">{{ per.title }}</el-button>
+                {{ per.comment }}
+                <el-button
+                  type="text"
+                  style="margin-right: 10px"
+                  size="mini"
+                  slot="reference"
+                  >{{ per.title }}</el-button
+                >
               </el-popover>
             </template>
           </el-table-column>
@@ -69,7 +85,6 @@
             align="center"
           >
             <template slot-scope="{ row }">
-              <el-button type="text">设置权限</el-button>
               <el-button
                 type="danger"
                 icon="el-icon-delete"
@@ -123,14 +138,19 @@
                 {{ item.data.title }}
               </div>
               <el-button
-              type="primary"
+                type="primary"
                 size="mini"
                 @click="selectPermission = true"
                 slot="active"
-                >选择</el-button>
-                <div slot="result">
-                  <el-tag v-for="per in role.permissions" :key="per.permisssionsId">{{per.title}}</el-tag>
-                </div>
+                >选择</el-button
+              >
+              <div slot="result">
+                <el-tag
+                  v-for="per in role.permissions"
+                  :key="per.permisssionsId"
+                  >{{ per.title }}</el-tag
+                >
+              </div>
             </h-selector>
           </el-form-item>
         </el-form>
@@ -140,6 +160,34 @@
         </span>
       </el-dialog>
       <!-- 添加角色====end -->
+      <el-dialog title="编辑角色" :visible.sync="editRole" width="50%">
+        <h-selector
+          action="permissions"
+          :multiple="true"
+          v-model="role.permissions"
+          :visible.sync="selectPermission"
+        >
+        <div slot-scope="item">
+                {{ item.data.title }}
+              </div>
+          <el-button
+            type="primary"
+            size="mini"
+            @click="selectPermission = true"
+            slot="active"
+            >选择</el-button
+          >
+          <div slot="result">
+            <el-tag v-for="per in role.permissions" :key="per.permisssionsId">{{
+              per.title
+            }}</el-tag>
+          </div>
+        </h-selector>
+        <span slot="footer">
+          <el-button @click="editRole = false">取消</el-button>
+          <el-button type="primary" @click="editSubmit">保存</el-button>
+        </span>
+      </el-dialog>
     </el-row>
   </div>
 </template>
@@ -155,19 +203,24 @@ export default {
       roles: [],
       search: {},
       c_role: {},
-      tableSelector:[]
+      tableSelector: [],
+      editRole: false,
     };
   },
   components: {
     hSelector,
   },
   methods: {
-    async delMultiple(){
-      if(this.tableSelector.length < 1){
+    async delMultiple() {
+      if (this.tableSelector.length < 1) {
         this.$message("至少选择一项，请选择！");
-        return ;
+        return;
       }
-      await this.$confirm(`确定将${this.tableSelector.map(i => i.name)}删除?`,"提示！",{type:"error"});
+      await this.$confirm(
+        `确定将${this.tableSelector.map((i) => i.name)}删除?`,
+        "提示！",
+        { type: "error" }
+      );
       for (const item of this.tableSelector) {
         await this.$axios.delete(`role/${item.roleId}`);
         await this.fetch();
@@ -188,6 +241,11 @@ export default {
       this.showDialog = false;
       await this.fetch();
     },
+    edit(row) {
+      this.c_role = row;
+      this.editRole = true;
+    },
+    async editSubmit() {},
     async del(id) {
       await this.$confirm("确定删除？？");
       await this.$axios.delete(`role/${id}`);

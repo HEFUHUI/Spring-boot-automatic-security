@@ -33,7 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
-@Controller
+@RestController
 @RequestMapping("/auth")
 @Slf4j
 public class AuthController {
@@ -73,44 +73,15 @@ public class AuthController {
         return "login";
     }
 
-    @PostMapping("/login")
-    public String login(
-            @RequestParam("userName") String userName,
-            @RequestParam("password") String password,
-            @RequestParam("verificationCode") String verificationCode,
-            Model model,HttpSession session){
-//        if(!loginInput.getVerificationCode().equalsIgnoreCase((String) session.getAttribute(VERIRFCODE_NAME))){
-//                model.addAttribute("err","验证码错误!");
-//            return "login";
-//        }
-        Subject subject = SecurityUtils.getSubject();
-        UsernamePasswordToken token = new UsernamePasswordToken(userName,password);
-        try{
-            // 发起登录
-            subject.login(token);
-            return "redirect:/index";
-        }catch (UnknownAccountException unknownAccountException){
-            model.addAttribute("err","用户不存在或者已在别处登录！");
-            return "login";
-        }
-        catch (Exception e){
-            // 发生错误则表示账户有问题，直接返回
-            model.addAttribute("err","用户名或者密码错误");
-            return "login";
-        }
-    }
 
     @GetMapping("/unauth")
-    @ResponseBody
     @ResponseStatus(code = HttpStatus.UNAUTHORIZED)
     public StandardResult<String> unauth(){
         return StandardResult.failed("请登录!");
     }
 
-    @GetMapping("/{no_permission}")
-    @ResponseBody
-    public StandardResult<String> no_permission(@PathVariable String no_permission){
-        System.out.println(no_permission);
+    @GetMapping("/no_permission")
+    public StandardResult<String> no_permission(){
         return StandardResult.failed("用户无权限操作!");
     }
 

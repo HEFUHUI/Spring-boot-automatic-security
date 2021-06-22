@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
 @Slf4j
 @RequestMapping("/user")
 public class UserController extends CrudControllerA<TUser> {
@@ -48,7 +48,6 @@ public class UserController extends CrudControllerA<TUser> {
 
 
     @GetMapping("{id}")
-    @ResponseBody
     public StandardResult<TUser> get(@PathVariable String id) {
         return StandardResult.success("获取成功！",userService.findById(id));
     }
@@ -67,12 +66,12 @@ public class UserController extends CrudControllerA<TUser> {
      * @return StandardResult<UserVO>
      */
     @GetMapping("me")
-    @ResponseBody
     @RequiresPermissions("user:me")
     public StandardResult<UserVO> me(){
         UserVO userVO = (UserVO) SecurityUtils.getSubject().getPrincipal();
         return StandardResult.success(userVO);
     }
+
 
     /**
      * 给用户设置角色
@@ -81,7 +80,6 @@ public class UserController extends CrudControllerA<TUser> {
      * @return 标准输出
      */
     @PutMapping("/grant/{id}")
-    @ResponseBody
     public StandardResult<TUser> grant(@RequestBody TRole role,@PathVariable String id){
         if (userService.setRole(new String[]{role.getRoleId()},id)) {
             return StandardResult.success(HttpStatus.NO_CONTENT.value());
@@ -91,7 +89,6 @@ public class UserController extends CrudControllerA<TUser> {
     }
 
     @PutMapping("/revoke/{userId}/{roleId}")
-    @ResponseBody
     public StandardResult<TUser> revoke(@PathVariable String roleId, @PathVariable String userId){
         if (userService.revoke(roleId,userId)) {
             return StandardResult.success(HttpStatus.NO_CONTENT.value());
@@ -102,7 +99,6 @@ public class UserController extends CrudControllerA<TUser> {
 
     @RequiresAuthentication
     @GetMapping("/logout")
-    @ResponseBody
     public StandardResult<String> logout() {
         Subject subject = SecurityUtils.getSubject();
         subject.logout();
@@ -110,6 +106,7 @@ public class UserController extends CrudControllerA<TUser> {
     }
 
     @Override
+    @RequiresPermissions("user:update")
     public StandardResult<TUser> update(TUser data, String id) {
         if (userService.update(data,id)) {
             return StandardResult.success(HttpStatus.NO_CONTENT.value());
@@ -124,6 +121,7 @@ public class UserController extends CrudControllerA<TUser> {
      * @return StandardResult<TUser>
      */
     @Override
+    @RequiresPermissions("user:delete")
     public StandardResult<TUser> delete(String id) {
             if(userService.remove(id)){
                 return StandardResult.success(HttpStatus.NO_CONTENT.value());
@@ -133,28 +131,7 @@ public class UserController extends CrudControllerA<TUser> {
     }
 
 
-    /**
-     *
-     * @param model 视图模型
-     * @param page 第几页
-     * @param limit 一页几条
-     * @return String
-     */
-    @GetMapping("index")
-    public String index(Model model,
-                        @RequestParam(value = "page",defaultValue = "1",required = false) int page,
-                        @RequestParam(value = "limit",defaultValue = "10",required = false) int limit){
-        //获取当前登录用户的信息
-        UserVO userVO = (UserVO) SecurityUtils.getSubject().getPrincipal();
-        model.addAttribute("pages",userService.findAll(new Page<>(limit,page)));
-        model.addAttribute("roles",roleService.findAll(new Page<>(10,1)));
-        model.addAttribute("user",userVO);
-        model.addAttribute("title","用户");
-        return "pages/user";
-    }
-
     @PutMapping("setClass/{userId}/{classId}")
-    @ResponseBody
     public StandardResult<String> setClass(@PathVariable String classId, @PathVariable String userId){
         if (userService.setClass(userId,classId)) {
             return StandardResult.success(HttpStatus.NO_CONTENT.value());

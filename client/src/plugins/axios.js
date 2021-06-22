@@ -13,6 +13,7 @@ const _axios = axios.create({
   timeout: config.timeout,
 });
 _axios.options.withCredentials = true;
+
 let loading;
 function startLoading(){
   loading = Loading.service({
@@ -40,17 +41,17 @@ _axios.interceptors.request.use(
 
 _axios.interceptors.response.use(
   function(response) {
+    stopLoading();
     if(response.data.code >= 300){
-      console.log(response)
       Message({type:"error",message:response.data.msg,showClose:true})
     }
     if(response.data.code === 204){
       Message({type:"success",message:response.data.msg,showClose:true})
     }
-    stopLoading();
     return response;
   },
   function(error) {
+    stopLoading();
     if(error.response.data.status === 401){
       sessionStorage.removeItem("sessionsID")
       Message({
@@ -65,7 +66,6 @@ _axios.interceptors.response.use(
         showClose:true,
       })
     }
-    stopLoading();
     return Promise.reject(error);
   }
 );
