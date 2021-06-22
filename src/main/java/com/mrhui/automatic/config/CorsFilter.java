@@ -1,7 +1,6 @@
 package com.mrhui.automatic.config;
 
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpStatus;
 
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
