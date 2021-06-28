@@ -80,9 +80,9 @@ export default {
           if (res.data.code !== 200) {
             this.$message({ type: "error", message: res.data.msg });
           } else {
-            sessionStorage.setItem("sessionsID", res.data.msg);
-            this.$store.commit("login", res.data.data);
-            window.location.href = "/"
+            sessionStorage.setItem("token", res.data.msg);
+            this.$store.commit("login", res.data.data.user);
+            this.$router.replace({path: "/"})
           }
         } else {
           this.$message({ type: "error", message: "请输入！" });

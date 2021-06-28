@@ -28,8 +28,9 @@ function stopLoading(){
 _axios.interceptors.request.use(
   function(config) {
     startLoading();
-    if(sessionStorage.getItem("sessionsID")){
-      config.headers.common['Authorization'] = sessionStorage.getItem("sessionsID")
+    const token = sessionStorage.getItem("token");
+    if(token){
+      config.headers.common['Authorization'] = `${token}`;
     }
     return config;
   },
@@ -52,8 +53,8 @@ _axios.interceptors.response.use(
   },
   function(error) {
     stopLoading();
-    if(error.response.data.status === 401){
-      sessionStorage.removeItem("sessionsID")
+    if(error.response.status === 401 ||error.response.data.status === 401){
+      sessionStorage.removeItem("token")
       Message({
         type:"error",
         message:"登录失效.请重新登录!",
@@ -69,12 +70,7 @@ _axios.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-let ws;
-function connectWS(){
-  ws = new WebSocket(`ws://${config.host}/ws?token=${sessionStorage.getItem("sessionsID")}`);
-}
-connectWS();
-
+let ws = new WebSocket(`ws://${config.host}/ws?token=${sessionStorage.getItem("token")}`);
 const app = new Vue();
 
 Plugin.install = function(Vue) {

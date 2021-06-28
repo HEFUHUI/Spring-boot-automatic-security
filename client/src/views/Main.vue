@@ -11,12 +11,12 @@
           <div slot="reference" class="right-body">
             <div>
               <el-image class="avatar" fit="cover"
-                        :src="$axios.defaults.baseURL+'/image/get/'+(userInfo.user.avatar&&userInfo.user.avatar.imageId)"></el-image>
+                        :src="$axios.defaults.baseURL+'/image/get/'+(userInfo.user.avatar && userInfo.user.avatar.imageId)"></el-image>
             </div>
             <div>
-              <span v-text="userInfo.user && userInfo.user.nickName">管理员</span>
+              <span v-text="userInfo && userInfo.user.nickName">管理员</span>
               <br>
-              <span v-text="userInfo.user && userInfo.user.userId">123</span>
+              <span v-text="userInfo && userInfo.user.userId">123</span>
             </div>
           </div>
         </el-popover>
@@ -80,7 +80,7 @@
       <h-char :msgs="msgs"></h-char>
     </el-dialog>
     <div class="fixed-box">
-      <div><el-button type="info" icon="el-icon-tickets" @click="fetch" circle></el-button></div>
+      <div><el-button type="info" icon="el-icon-tickets" @click="cWs" circle></el-button></div>
       <div><el-button type="success" icon="el-icon-user-solid" @click="showDrawer = true" circle></el-button></div>
       <div>
         <el-badge :value="unread" :hidden="unread < 1">
@@ -98,6 +98,7 @@
 <script>
 import hOnlineUsers from "../components/OnlineUsers";
 import hChar from "../components/Chat";
+import {config} from "@/plugins/axios";
 export default {
   data() {
     return {
@@ -153,12 +154,20 @@ export default {
     async logout(){
       await this.$confirm('确定退出登录吗？？');
       await this.$ws.close();
-      await this.$axios.get("user/logout");
+      await sessionStorage.clear();
+      // await this.$axios.get("user/logout");
       await this.$router.push("/login");
     },
+    cWs(){
+      new WebSocket(`ws://${config.host}/ws?token=${sessionStorage.getItem("token")}`)
+    },
     async fetch(){
-      const res = await this.$axios.get("user/me");
-      this.$store.commit("login",res.data.data);
+      try {
+        const res = await this.$axios.get("user/me");
+        this.$store.commit("login",res.data.data);
+      }catch (e){
+        console.log(e.message)
+      }
     },
 
   },
@@ -183,7 +192,12 @@ export default {
   },
   computed:{
     userInfo(){
-      return this.$store.getters.userInfo;
+
+      return this.$store.getters.userInfo == null ?  {
+        user:{
+          avatar:{}
+        }
+      } : this.$store.getters.userInfo;
     },
     readyState(){
       return this.$store.getters.readyState;

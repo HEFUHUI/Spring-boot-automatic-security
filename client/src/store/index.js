@@ -8,7 +8,9 @@ export default new Vuex.Store({
     userInfo: {
       permissions: [],
       roles: [],
-      user:{}
+      user:{
+        avatar:{}
+      },
     },
     readyState:0,
   },

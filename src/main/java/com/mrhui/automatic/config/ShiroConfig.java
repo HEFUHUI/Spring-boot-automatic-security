@@ -1,24 +1,24 @@
 package com.mrhui.automatic.config;
 
 import com.mrhui.automatic.interceptor.ShiroSessionListen;
-import com.mrhui.automatic.realm.UserRealm;
+import com.mrhui.automatic.shiro.JwtRealm;
+import com.mrhui.automatic.shiro.UserRealm;
+import lombok.val;
 import org.apache.shiro.authc.credential.HashedCredentialsMatcher;
+import org.apache.shiro.mgt.*;
 import org.apache.shiro.mgt.SecurityManager;
+import org.apache.shiro.realm.Realm;
 import org.apache.shiro.session.SessionListener;
-import org.apache.shiro.session.mgt.SessionKey;
 import org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor;
 import org.apache.shiro.spring.web.ShiroFilterFactoryBean;
 import org.apache.shiro.web.mgt.DefaultWebSecurityManager;
 import org.apache.shiro.web.session.mgt.DefaultWebSessionManager;
-import org.apache.shiro.web.session.mgt.WebSessionKey;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import javax.servlet.Filter;
+import java.util.*;
 
 @Configuration
 public class ShiroConfig {
@@ -31,21 +31,24 @@ public class ShiroConfig {
     public ShiroFilterFactoryBean filterFactoryBean(@Qualifier("webSecurityManager") SecurityManager webSecurityManager) {
         ShiroFilterFactoryBean filterFactoryBean = new ShiroFilterFactoryBean();
         filterFactoryBean.setSecurityManager(webSecurityManager);
+
+        Map<String, Filter> stringFilterMap = new LinkedHashMap<>();
+        stringFilterMap.put("jwt",jwtFilter());
+        filterFactoryBean.setFilters(stringFilterMap);
+
         Map<String, String> filterMap = new LinkedHashMap<>();
-        //设置不需要验证的页面
+//        //设置不需要验证的页面
         filterMap.put("/auth/**", "anon");
         filterMap.put("/send", "anon");
         filterMap.put("/ws", "anon");
         filterMap.put("/user/logout", "anon");
         filterMap.put("/image/get/*", "anon");
-
-//        filterMap.put("/user/*","perms[user:*]");
 //        拦截所有请求 需要验证
-
+        filterMap.put("/**","jwt");
 //        filterMap.put("/**", "authc");
-//        设置登录页面
-        filterFactoryBean.setLoginUrl("/auth/unauth");
-        filterFactoryBean.setUnauthorizedUrl("/auth/no_permission");
+////        设置登录页面
+        filterFactoryBean.setLoginUrl("/auth/login-json");
+//        filterFactoryBean.setUnauthorizedUrl("/auth/no_permission");
         filterFactoryBean.setFilterChainDefinitionMap(filterMap);
         return filterFactoryBean;
     }
@@ -61,9 +64,24 @@ public class ShiroConfig {
             @Qualifier("sessionManager") DefaultWebSessionManager defaultWebSessionManager
     ) {
         DefaultWebSecurityManager manager = new DefaultWebSecurityManager();
-        manager.setRealm(userRealm);
-        manager.setSessionManager(defaultWebSessionManager);
+        List<Realm> realmList = new ArrayList<>();
+        realmList.add(userRealm);
+        realmList.add(jwtRealm());
+        manager.setRealms(realmList);
+        DefaultSubjectDAO subjectDAO = new DefaultSubjectDAO();
+        subjectDAO.setSessionStorageEvaluator(sessionStorageEvaluator());
+        manager.setSubjectDAO(subjectDAO);
+//        manager.setSessionManager(defaultWebSessionManager);
         return manager;
+    }
+
+
+
+    @Bean
+    public SessionStorageEvaluator sessionStorageEvaluator(){
+        DefaultSessionStorageEvaluator sessionStorageEvaluator = new DefaultSessionStorageEvaluator();
+        sessionStorageEvaluator.setSessionStorageEnabled(false);
+        return sessionStorageEvaluator;
     }
 
 
@@ -88,6 +106,12 @@ public class ShiroConfig {
         return new UserRealm();
     }
 
+
+    @Bean
+    public JwtRealm jwtRealm(){
+        return new JwtRealm();
+    }
+
     /**
      * 配置授权
      * @param securityManager SecurityManager
@@ -98,6 +122,13 @@ public class ShiroConfig {
         AuthorizationAttributeSourceAdvisor authorizationAttributeSourceAdvisor = new AuthorizationAttributeSourceAdvisor();
         authorizationAttributeSourceAdvisor.setSecurityManager(securityManager);
         return authorizationAttributeSourceAdvisor;
+    }
+
+    @Bean
+    public JwtFilter jwtFilter(){
+        val jwtFilter = new JwtFilter();
+        jwtFilter.setLoginUrl("/auth/login");
+        return jwtFilter;
     }
 
     @Bean

@@ -15,14 +15,26 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserVO implements Serializable {
-
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 用户信息
+     */
     private TUser user;
 
+    /**
+     * 权限列表
+     */
     private List<TPermissions> permissions;
 
+    /**
+     * 用户信息
+     */
     private List<TRole> roles;
+    /**
+     * 用户凭证
+     */
+    private String token;
 
     public UserVO(TUser user) {
         this.user = user;

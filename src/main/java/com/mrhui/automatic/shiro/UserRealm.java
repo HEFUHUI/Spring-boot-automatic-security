@@ -1,4 +1,4 @@
-package com.mrhui.automatic.realm;
+package com.mrhui.automatic.shiro;
 
 import com.mrhui.automatic.entity.TPermissions;
 import com.mrhui.automatic.entity.TUser;
@@ -7,6 +7,7 @@ import com.mrhui.automatic.service.LoggingService;
 import com.mrhui.automatic.service.TPermissionsService;
 import com.mrhui.automatic.service.TRoleService;
 import com.mrhui.automatic.service.TUserService;
+import com.mrhui.automatic.utils.JwtUtils;
 import com.mrhui.automatic.utils.MD5;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
@@ -47,9 +48,7 @@ public class UserRealm extends AuthorizingRealm {
         // 获取当前用户信息
         final UserVO userVO = (UserVO) currentUser.getPrincipal();
         // 获取权限并授权
-        userVO.getPermissions().forEach(el->{
-            authorizationInfo.addStringPermission(el.getCode());
-        });
+        userVO.getPermissions().forEach(el-> authorizationInfo.addStringPermission(el.getCode()));
         return authorizationInfo;
     }
 
@@ -72,9 +71,7 @@ public class UserRealm extends AuthorizingRealm {
         // 通过用户ID查出用户身份
         val roles = roleService.findByUserId(user.getUserId());
         // 通过身份ID查出权限
-        roles.forEach(element->{
-            tPermissions.addAll(permissionsService.findByRoleId(element.getRoleId()));
-        });
+        roles.forEach(element-> tPermissions.addAll(permissionsService.findByRoleId(element.getRoleId())));
         UserVO userVo = new UserVO();
         // 设置用户信息到VO
         userVo.setUser(user);
@@ -82,18 +79,17 @@ public class UserRealm extends AuthorizingRealm {
         userVo.setPermissions(tPermissions);
         // 设置角色到VO
         userVo.setRoles(roles);
+        //设置凭证
+        userVo.setToken(JwtUtils.getToken(user));
         // 验证密码
         SimpleAuthenticationInfo simpleAuthenticationInfo = new SimpleAuthenticationInfo(userVo,
                 user.getPassword(),
                 ByteSource.Util.bytes(user.getLoginName()),
                 getName());
-        //更新用户为登录状态
-//        loggingService.login(true,user.getUserId(),"登录成功!");
         val sessionId = SecurityUtils.getSubject().getSession().getId();
         val host = SecurityUtils.getSubject().getSession().getHost();
         user.setSessionId(sessionId.toString());
         user.setLoginIp(host);
         return simpleAuthenticationInfo;
-
     }
 }

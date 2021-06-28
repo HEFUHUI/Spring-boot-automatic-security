@@ -31,4 +31,10 @@ public class HomeController {
 
     @Autowired
     private Gson gson;
+
+
+    @GetMapping("/")
+    public String index(){
+        return "index";
+    }
 }

@@ -42,7 +42,7 @@ const router = new VueRouter({
   routes
 })
 router.beforeEach((to, from, next) => {
-  if (!to.meta.isPublic && !sessionStorage.getItem("sessionsID")) {
+  if (!to.meta.isPublic && !sessionStorage.getItem("token")) {
     return next('/login')
   }
   next()

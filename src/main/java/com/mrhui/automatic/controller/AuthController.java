@@ -58,7 +58,7 @@ public class AuthController {
             //登录成功后拿到用户信息
             UserVO userVO = (UserVO) subject.getPrincipal();
             //返回sessionID和用户信息
-            return StandardResult.success(session.getId(), HttpStatus.OK.value(),userVO);
+            return StandardResult.success(userVO.getToken(),HttpStatus.OK.value(),userVO);
         }catch (UnknownAccountException unknownAccountException){
             return StandardResult.failed("用户不存在或已在别处登录！");
         }
@@ -88,7 +88,7 @@ public class AuthController {
     @GetMapping("/ver")
     public void login(HttpServletRequest httpServletRequest,
                       HttpServletResponse httpServletResponse) throws IOException {
-        byte[] captchaOutputStream = null;
+        byte[] captchaOutputStream;
         ByteArrayOutputStream imgOutputStream = new ByteArrayOutputStream();
         try {
             //生产验证码字符串并保存到session中
